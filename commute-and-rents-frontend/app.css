@@ -2,10 +2,18 @@
 
 html, body, #app {
     height: 100%;
+    margin: 0;
 }
 
 #map {
     height: 100%;
     float: left;
     width: 50%;
+}
+
+#chart {
+    height: 100%;
+    float: left;
+    width: 50%;
+    overflow-y: scroll;
 }
