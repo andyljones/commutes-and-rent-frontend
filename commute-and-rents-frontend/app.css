@@ -1,1 +1,11 @@
-﻿
+﻿@import "library/leaflet/leaflet.css";
+
+html, body, #app {
+    height: 100%;
+}
+
+#map {
+    height: 100%;
+    float: left;
+    width: 50%;
+}

@@ -31,7 +31,7 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="commutes-and-rent.ts" />
     <TypeScriptCompile Include="library\d3\d3.d.ts" />
     <TypeScriptCompile Include="library\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="library\leaflet\leaflet.d.ts" />
