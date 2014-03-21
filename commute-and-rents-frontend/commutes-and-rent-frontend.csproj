@@ -1,0 +1,629 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{BEE5EF74-B199-4AD2-A346-7A132658E9E2}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <OutputPath>bin</OutputPath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <TypeScriptToolsVersion>0.9</TypeScriptToolsVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="app.css" />
+    <Content Include="index.html" />
+    <Content Include="library\d3\d3.min.js" />
+    <Content Include="library\jquery\jquery-2.1.0.min.js" />
+    <Content Include="library\leaflet\images\layers-2x.png" />
+    <Content Include="library\leaflet\images\layers.png" />
+    <Content Include="library\leaflet\images\marker-icon-2x.png" />
+    <Content Include="library\leaflet\images\marker-icon.png" />
+    <Content Include="library\leaflet\images\marker-shadow.png" />
+    <Content Include="library\leaflet\leaflet.css" />
+    <Content Include="library\leaflet\leaflet.js" />
+    <Content Include="web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="library\d3\d3.d.ts" />
+    <TypeScriptCompile Include="library\jquery\jquery.d.ts" />
+    <TypeScriptCompile Include="library\leaflet\leaflet.d.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="preprocessor-output\processed-departure-times\0900\Acton Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Aldgate East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Aldgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Alperton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Amersham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Angel.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Archway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Arnos Grove.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Arsenal.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Baker Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Balham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bank.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Barbican.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Barking.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Barkingside.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Barons Court.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bayswater.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Becontree.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Belsize Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bermondsey.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bethnal Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Blackfriars.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Blackhorse Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bond Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Borough Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Boston Manor.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bounds Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bow Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Brent Cross Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Brixton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Bromley-By-Bow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Buckhurst Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Burnt Oak.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Caledonian Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Camden Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Canada Water.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Canary Wharf.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Canning Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Cannon Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Canons Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chalfont &amp; Latimer.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chalk Farm.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chancery Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Charing Cross.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chesham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chigwell.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chiswick Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Chorleywood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Clapham Common.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Clapham North.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Clapham South.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Cockfosters.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Colindale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Colliers Wood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Covent Garden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Croxley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Dagenham East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Dagenham Heathway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Debden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Dollis Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ealing Broadway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ealing Common.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Earl%27s Court.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\East Acton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\East Finchley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\East Ham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\East Putney.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Eastcote.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Edgware Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Edgware.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Elephant &amp; Castle.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Elm Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Embankment.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Epping.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Euston Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Euston.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Fairlop.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Farringdon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Finchley Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Finchley Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Finsbury Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Fulham Broadway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Gants Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Gloucester Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Golders Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Goldhawk Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Goodge Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Grange Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Great Portland Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Green Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Greenford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Gunnersbury.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hainault.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hammersmith %28Ham &amp; City Line%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hammersmith.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hampstead Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hanger Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Harlesden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Harrow &amp; Wealdstone Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Harrow-on-the-Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hatton Cross.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Heathrow Terminal 4.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Heathrow Terminal 5.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Heathrow Terminals 1-3.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hendon Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\High Barnet.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\High Street Kensington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Highbury &amp; Islington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Highgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hillingdon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Holborn.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Holland Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Holloway Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hornchurch.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hounslow Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hounslow East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hounslow West.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Hyde Park Corner.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ickenham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kennington Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kensal Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kensington %28Olympia%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kentish Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kenton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kew Gardens.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kilburn Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kilburn.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\King%27s Cross St.Pancras.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Kingsbury.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Knightsbridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ladbroke Grove.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Lambeth North.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Lancaster Gate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Latimer Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Leicester Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Leyton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Leytonstone.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Liverpool Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\London Bridge Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Loughton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Maida Vale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Manor House.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Mansion House.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Marble Arch.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Marylebone.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Mile End.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Mill Hill East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Monument.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Moor Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Moorgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Morden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Mornington Crescent.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Neasden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Newbury Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\North Acton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\North Ealing.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\North Greenwich.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\North Harrow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\North Wembley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Northfields.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Northolt.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Northwick Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Northwood Hills.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Northwood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Notting Hill Gate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Oakwood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Old Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Osterley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Oval.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Oxford Circus.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Paddington %28H&amp;C Line%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Paddington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Park Royal.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Parsons Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Perivale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Piccadilly Circus.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Pimlico.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Pinner.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Plaistow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Preston Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Putney Bridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Queen%27s Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Queensbury.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Queensway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ravenscourt Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Rayners Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Redbridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Regent%27s Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Richmond.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Rickmansworth.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Roding Valley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Royal Oak.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ruislip Gardens.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ruislip Manor.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Ruislip.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Russell Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Seven Sisters.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Shepherd%27s Bush %28Central Line%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Shepherd%27s Bush Market.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Sloane Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Snaresbrook.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Ealing.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Harrow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Kensington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Kenton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Ruislip.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Wimbledon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\South Woodford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Southfields.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Southgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Southwark.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\St James%27s Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\St. Paul%27s.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\St.John%27s Wood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Stamford Brook.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Stanmore.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Stepney Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Stockwell.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Stonebridge Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Stratford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Sudbury Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Sudbury Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Swiss Cottage.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Temple.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Theydon Bois.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Tooting Bec Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Tooting Broadway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Tottenham Court Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Tottenham Hale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Totteridge &amp; Whetstone.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Tower Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Tufnell Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Turnham Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Turnpike Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Upminster Bridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Upminster.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Upney.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Upton Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Uxbridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Vauxhall.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Victoria.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Walthamstow Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wanstead.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Warren Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Warwick Avenue.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Waterloo.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Watford Underground Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wembley Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wembley Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Acton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Brompton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Finchley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Ham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Hampstead.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Harrow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Kensington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\West Ruislip.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Westbourne Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Westminster.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\White City.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Whitechapel.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Willesden Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Willesden Junction.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wimbledon Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wimbledon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wood Green Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Wood Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Woodford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\0900\Woodside Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Acton Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Aldgate East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Aldgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Alperton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Amersham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Angel.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Archway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Arnos Grove.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Arsenal.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Baker Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Balham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bank.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Barbican.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Barking.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Barkingside.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Barons Court.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bayswater.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Becontree.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Belsize Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bermondsey.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bethnal Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Blackfriars.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Blackhorse Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bond Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Borough Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Boston Manor.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bounds Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bow Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Brent Cross Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Brixton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Bromley-By-Bow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Buckhurst Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Burnt Oak.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Caledonian Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Camden Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Canada Water.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Canary Wharf.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Canning Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Cannon Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Canons Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chalfont &amp; Latimer.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chalk Farm.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chancery Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Charing Cross.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chesham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chigwell.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chiswick Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Chorleywood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Clapham Common.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Clapham North.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Clapham South.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Cockfosters.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Colindale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Colliers Wood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Covent Garden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Croxley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Dagenham East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Dagenham Heathway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Debden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Dollis Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ealing Broadway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ealing Common.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Earl%27s Court.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\East Acton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\East Finchley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\East Ham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\East Putney.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Eastcote.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Edgware Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Edgware.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Elephant &amp; Castle.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Elm Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Embankment.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Epping.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Euston Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Euston.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Fairlop.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Farringdon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Finchley Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Finchley Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Finsbury Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Fulham Broadway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Gants Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Gloucester Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Golders Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Goldhawk Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Goodge Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Grange Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Great Portland Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Green Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Greenford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Gunnersbury.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hainault.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hammersmith %28Ham &amp; City Line%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hammersmith.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hampstead Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hanger Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Harlesden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Harrow &amp; Wealdstone Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Harrow-on-the-Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hatton Cross.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Heathrow Terminal 4.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Heathrow Terminal 5.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Heathrow Terminals 1-3.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hendon Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\High Barnet.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\High Street Kensington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Highbury &amp; Islington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Highgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hillingdon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Holborn.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Holland Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Holloway Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hornchurch.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hounslow Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hounslow East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hounslow West.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Hyde Park Corner.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ickenham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kennington Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kensal Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kensington %28Olympia%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kentish Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kenton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kew Gardens.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kilburn Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kilburn.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\King%27s Cross St.Pancras.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Kingsbury.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Knightsbridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ladbroke Grove.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Lambeth North.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Lancaster Gate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Latimer Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Leicester Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Leyton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Leytonstone.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Liverpool Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\London Bridge Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Loughton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Maida Vale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Manor House.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Mansion House.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Marble Arch.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Marylebone.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Mile End.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Mill Hill East.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Monument.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Moor Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Moorgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Morden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Mornington Crescent.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Neasden.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Newbury Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\North Acton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\North Ealing.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\North Greenwich.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\North Harrow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\North Wembley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Northfields.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Northolt.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Northwick Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Northwood Hills.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Northwood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Notting Hill Gate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Oakwood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Old Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Osterley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Oval.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Oxford Circus.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Paddington %28H&amp;C Line%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Paddington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Park Royal.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Parsons Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Perivale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Piccadilly Circus.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Pimlico.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Pinner.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Plaistow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Preston Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Putney Bridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Queen%27s Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Queensbury.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Queensway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ravenscourt Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Rayners Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Redbridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Regent%27s Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Richmond.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Rickmansworth.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Roding Valley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Royal Oak.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ruislip Gardens.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ruislip Manor.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Ruislip.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Russell Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Seven Sisters.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Shepherd%27s Bush %28Central Line%29.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Shepherd%27s Bush Market.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Sloane Square.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Snaresbrook.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Ealing.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Harrow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Kensington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Kenton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Ruislip.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Wimbledon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\South Woodford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Southfields.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Southgate.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Southwark.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\St James%27s Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\St. Paul%27s.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\St.John%27s Wood.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Stamford Brook.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Stanmore.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Stepney Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Stockwell.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Stonebridge Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Stratford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Sudbury Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Sudbury Town.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Swiss Cottage.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Temple.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Theydon Bois.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Tooting Bec Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Tooting Broadway.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Tottenham Court Road.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Tottenham Hale.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Totteridge &amp; Whetstone.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Tower Hill.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Tufnell Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Turnham Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Turnpike Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Upminster Bridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Upminster.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Upney.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Upton Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Uxbridge.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Vauxhall.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Victoria.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Walthamstow Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wanstead.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Warren Street.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Warwick Avenue.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Waterloo.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Watford Underground Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wembley Central.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wembley Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Acton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Brompton.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Finchley.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Ham.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Hampstead.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Harrow.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Kensington.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\West Ruislip.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Westbourne Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Westminster.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\White City.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Whitechapel.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Willesden Green.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Willesden Junction.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wimbledon Park.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wimbledon.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wood Green Station.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Wood Lane.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Woodford.json" />
+    <Content Include="preprocessor-output\processed-departure-times\1700\Woodside Park.json" />
+    <Content Include="preprocessor-output\processed-locations\locations.json" />
+    <Content Include="preprocessor-output\processed-rents\three-bedroom-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\two-bedroom-rents.json" />
+    <None Include="web.Debug.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+    <None Include="web.Release.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>commute_and_rents_frontend</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>53786</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:53786/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+    <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+    <TypeScriptRemoveComments>true</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>false</TypeScriptSourceMap>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+  </PropertyGroup>
+  <Import Project="$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets')" />
+</Project>
