@@ -1,0 +1,207 @@
+﻿window.onload = () => {
+    var loader: CommutesAndRent.Loader = new CommutesAndRent.Loader();
+};
+
+module CommutesAndRent {
+
+    export class Loader {
+
+        constructor() {
+            var map: Map = new Map();
+            var chart: Chart = new Chart(() => map.getSelectedStation());
+        }
+    }
+}
+
+module CommutesAndRent {
+
+    export class Map {
+
+        public getSelectedStation(): string { return this.selectedStation; }
+        private selectedStation: string = "";
+
+        private map: L.Map;
+
+        private static mapTileURLTemplate: string = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
+        private static mapId: string = "coffeetable.hinlda0l";
+
+        private static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
+        private static defaultZoom: number = 13;
+
+        constructor() {
+            this.buildMap();
+            this.placeStationMarkers();
+        }
+
+        private buildMap(): void 
+        {
+            this.map = L.map("map").setView(Map.defaultCenter, Map.defaultZoom);
+            var tileLayer: L.TileLayer = new L.TileLayer(Map.mapTileURLTemplate, { mapid: Map.mapId });
+            tileLayer.addTo(this.map);
+        }
+
+        private placeStationMarkers(): void
+        {
+            $.getJSON("preprocessor-output/processed-locations/locations.json", data => this.addStationLocations(data));
+        }
+
+        private addStationLocations(data: any): void
+        {
+            for (var i: number = 0; i < data.length; i++)
+            {
+                var name: string = data[i].name;
+                var latitude: number = data[i].latitude;
+                var longitude: number = data[i].longitude;
+
+                var marker: L.Marker = L.marker(new L.LatLng(latitude, longitude), 10);
+                this.map.addLayer(marker);
+
+                (<StationMarker>marker).stationName = name;
+
+                marker.bindPopup(name);
+                marker.on("click", e => this.updateSelection(e));
+            }
+        }
+
+        private updateSelection(event: L.LeafletMouseEvent): void
+        {
+            var marker: StationMarker = <StationMarker>event.target;
+            this.selectedStation = marker.stationName;
+        }
+    }
+
+    interface StationMarker extends L.Marker {
+        stationName: string;
+    }
+}
+
+module CommutesAndRent {
+
+    interface RentStatistic {
+        name: string;
+        lowerQuartile: number;
+        median: number;
+        upperQuartile: number;
+    }
+
+    interface DepartureTimes {
+        arrivalTime: number;
+        destination: string;
+        times: DepartureTime[];
+    }
+
+    interface DepartureTime {
+        station: string;
+        time: number;
+    }
+
+    export class ChartData
+    {
+
+    }
+
+    export class Chart
+    {
+        private getSelectedStation: () => string;
+        private rentStats: RentStatistic[];
+
+        private arrivalTime: number;
+        private destination: string;
+        private departureTimes: any;
+
+        private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
+        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+
+        private chartGraphic: D3.Selection;
+        private graphicHeight: number;
+        private graphicWidth: number;
+
+        private static verticalMargin: number = 30;
+        private static horizontalMargin: number = 30;
+        private static barSpacing: number = 2;
+
+        constructor(getSelectedStation: () => string)
+        {
+            this.getSelectedStation = getSelectedStation;
+            this.initializeGraphic();
+
+            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadDepartureData("0900", "Woodside Park"))
+                .done(() => this.updateGraphic());
+        }
+
+        private loadRentData(filename: string): any
+        {
+            var filepath: string = Chart.rentStatsFolder + filename;
+
+            return $.getJSON(filepath, (data) => { this.rentStats = data; return null; });
+        }
+
+        private loadDepartureData(time: string, stationName: string): any
+        {
+            var filepath: string = Chart.departureTimesFolder + time + "/" + stationName + ".json";
+
+            return $.getJSON(filepath, (data) => { this.parseDepartureData(data); return null; }); 
+        }
+
+        private parseDepartureData(data: DepartureTimes): void
+        {
+            this.arrivalTime = data.arrivalTime;
+            this.destination = data.destination;
+
+            this.departureTimes = {};
+            for (var i: number = 0; i < data.times.length; i++)
+            {
+                var originStation: string = data.times[i].station;
+                var departureTime: number = data.times[i].time;
+                this.departureTimes[originStation] = departureTime;
+            }
+        }
+
+        private initializeGraphic(): void
+        {
+            this.chartGraphic = d3.select("#chart").append("svg").attr({ width: "100%", height: "100%" });
+            this.graphicHeight = $("#chart").height();
+            this.graphicWidth = $("#chart").width();
+        }
+
+        private updateGraphic(): void
+        {
+            var xScale: D3.Scale.LinearScale = d3.scale.linear()
+                .domain([d3.min(this.rentStats, d => d.lowerQuartile), d3.max(this.rentStats, d => d.upperQuartile)])
+                .range([Chart.horizontalMargin, this.graphicWidth - Chart.horizontalMargin])
+                .nice();
+
+            var yScale: D3.Scale.LinearScale = d3.scale.linear()
+                .domain([0, this.arrivalTime - d3.min(this.rentStats, d => this.departureTimes[d.name])])
+                .range([Chart.verticalMargin, this.graphicHeight - Chart.verticalMargin])
+                .nice();
+
+            this.chartGraphic.selectAll("text").data(this.rentStats).enter()
+                .append("rect")
+                .attr(this.drawRent(xScale, yScale));
+
+            var xAxis: D3.Svg.Axis = d3.svg.axis()
+                .scale(xScale)
+                .orient("bottom");
+            this.chartGraphic.append("svg:g")
+                .call(xAxis);
+
+            var yAxis: D3.Svg.Axis = d3.svg.axis()
+                .scale(yScale)
+                .orient("right");
+            this.chartGraphic.append("svg:g")
+                .call(yAxis);
+        }
+
+        private drawRent(xScale: D3.Scale.LinearScale, yScale: D3.Scale.LinearScale): any
+        {
+            return {
+                x: (d, i) => xScale(d.lowerQuartile),
+                y: (d, i) => yScale(this.arrivalTime - this.departureTimes[d.name]),
+                height: (d, i) => yScale(1) - yScale(0) - Chart.barSpacing,
+                width: (d, i) => xScale(d.upperQuartile) - xScale(d.lowerQuartile),
+                opacity: 0.2
+            };
+        }
+    }
+}

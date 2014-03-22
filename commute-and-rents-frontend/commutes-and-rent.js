@@ -1,131 +1,181 @@
 ﻿window.onload = function () {
-    var loader = new CommutesAndRent.Loader();
+    new CommutesAndRent.Map();
+    new CommutesAndRent.ChartController();
 };
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
-    var Loader = (function () {
-        function Loader() {
-            var map = new CommutesAndRent.MapView();
-            var chart = new CommutesAndRent.Chart(function () {
-                return map.getSelectedStation();
+    var Map = (function () {
+        function Map() {
+            var _this = this;
+            this.mapObject = Map.buildMap();
+
+            $.getJSON(Map.locationDataPath, function (data) {
+                return Map.addMarkers(_this.mapObject, data);
             });
         }
-        return Loader;
+        Map.buildMap = function () {
+            var map = L.map("map").setView(Map.defaultCenter, Map.defaultZoom);
+
+            new L.TileLayer(Map.mapTileURLTemplate, { mapid: Map.mapId }).addTo(map);
+
+            return map;
+        };
+
+        Map.addMarkers = function (map, locations) {
+            var _this = this;
+            locations.forEach(function (loc) {
+                return _this.addMarker(map, loc);
+            });
+        };
+
+        Map.addMarker = function (map, location) {
+            var latLng = new L.LatLng(location.latitude, location.longitude);
+
+            new L.Marker(latLng).addTo(map);
+        };
+        Map.mapTileURLTemplate = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
+        Map.mapId = "coffeetable.hinlda0l";
+
+        Map.defaultCenter = new L.LatLng(51.505, -0.09);
+        Map.defaultZoom = 13;
+
+        Map.locationDataPath = "preprocessor-output/processed-locations/locations.json";
+        return Map;
     })();
-    CommutesAndRent.Loader = Loader;
+    CommutesAndRent.Map = Map;
 })(CommutesAndRent || (CommutesAndRent = {}));
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
-    var MapView = (function () {
-        function MapView() {
-            this.selectedStation = "";
-            this.buildMap();
-            this.placeStationMarkers();
-        }
-        MapView.prototype.getSelectedStation = function () {
-            return this.selectedStation;
-        };
-
-        MapView.prototype.buildMap = function () {
-            this.map = L.map("map").setView(MapView.defaultCenter, MapView.defaultZoom);
-            var tileLayer = new L.TileLayer(MapView.mapTileURLTemplate, { mapid: MapView.mapId });
-            tileLayer.addTo(this.map);
-        };
-
-        MapView.prototype.placeStationMarkers = function () {
+    var ChartModel = (function () {
+        function ChartModel(successContinuation) {
             var _this = this;
-            $.getJSON("preprocessor-output/processed-locations/locations.json", function (data) {
-                return _this.addStationLocations(data);
+            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadTimesData()).then(function () {
+                return successContinuation(_this);
+            });
+        }
+        ChartModel.prototype.getDepartureData = function (time, stationName) {
+            var filepath = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
+
+            return $.getJSON(filepath);
+        };
+
+        ChartModel.prototype.loadRentData = function (filename) {
+            var _this = this;
+            var filepath = ChartModel.rentStatsFolder + filename;
+
+            return $.getJSON(filepath, function (data) {
+                _this.rents = data;
+                return null;
             });
         };
 
-        MapView.prototype.addStationLocations = function (data) {
+        ChartModel.prototype.loadTimesData = function () {
             var _this = this;
-            for (var i = 0; i < data.length; i++) {
-                var name = data[i].name;
-                var latitude = data[i].latitude;
-                var longitude = data[i].longitude;
+            var filepath = ChartModel.departureTimesFolder + "times.json";
 
-                var marker = L.marker(new L.LatLng(latitude, longitude), 10);
-                this.map.addLayer(marker);
-
-                marker.stationName = name;
-
-                marker.bindPopup(name);
-                marker.on("click", function (e) {
-                    return _this.updateSelection(e);
-                });
-            }
+            return $.getJSON(filepath, function (data) {
+                _this.arrivalTimes = data;
+                return null;
+            });
         };
-
-        MapView.prototype.updateSelection = function (event) {
-            var marker = event.target;
-            this.selectedStation = marker.stationName;
-        };
-        MapView.mapTileURLTemplate = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
-        MapView.mapId = "coffeetable.hinlda0l";
-
-        MapView.defaultCenter = new L.LatLng(51.505, -0.09);
-        MapView.defaultZoom = 13;
-        return MapView;
+        ChartModel.rentStatsFolder = "preprocessor-output/processed-rents/";
+        ChartModel.departureTimesFolder = "preprocessor-output/processed-departure-times/";
+        return ChartModel;
     })();
-    CommutesAndRent.MapView = MapView;
+    CommutesAndRent.ChartModel = ChartModel;
 })(CommutesAndRent || (CommutesAndRent = {}));
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
-    var Chart = (function () {
-        function Chart(getSelectedStation) {
-            var _this = this;
-            this.getSelectedStation = getSelectedStation;
-            this.initializeGraphic();
-
-            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadDepartureData("0900", "Baker Street")).done(function () {
-                return _this.updateGraphic();
-            });
+    var ChartController = (function () {
+        function ChartController() {
+            new CommutesAndRent.ChartModel(this.initializeController);
         }
-        Chart.prototype.loadRentData = function (filename) {
+        ChartController.prototype.initializeController = function (model) {
             var _this = this;
-            var filepath = Chart.rentStatsFolder + filename;
+            this.model = model;
+            this.view = new CommutesAndRent.ChartView(model.rents);
 
-            return $.getJSON(filepath, function (data) {
-                _this.rentStats = data;
-                return null;
+            model.getDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination).then(function (data) {
+                return _this.view.setDepartureData(data);
             });
         };
-
-        Chart.prototype.loadDepartureData = function (time, stationName) {
-            var _this = this;
-            var filepath = Chart.departureTimesFolder + time + "/" + stationName + ".json";
-
-            return $.getJSON(filepath, function (data) {
-                _this.departureTimes = data;
-                return null;
-            });
-        };
-
-        Chart.prototype.initializeGraphic = function () {
-            this.chartGraphic = d3.select("#chart").append("svg").attr({ width: "100%", height: "100%", overflow: "scroll" });
-        };
-
-        Chart.prototype.updateGraphic = function () {
-            this.chartGraphic.selectAll("text").data(this.rentStats).enter().append("text").text(function (d) {
-                return d.name;
-            }).attr("y", function (d, i) {
-                return 20 * i;
-            });
-
-            this.chartGraphic.attr("height", this.rentStats.length * 20);
-        };
-
-        Chart.prototype.drawRent = function (rentStat, index) {
-        };
-        Chart.rentStatsFolder = "preprocessor-output/processed-rents/";
-        Chart.departureTimesFolder = "preprocessor-output/processed-departure-times/";
-        return Chart;
+        ChartController.defaultArrivalTime = 480;
+        ChartController.defaultDestination = "Barbican";
+        return ChartController;
     })();
-    CommutesAndRent.Chart = Chart;
+    CommutesAndRent.ChartController = ChartController;
+})(CommutesAndRent || (CommutesAndRent = {}));
+
+var CommutesAndRent;
+(function (CommutesAndRent) {
+    var ChartView = (function () {
+        function ChartView(rentStats) {
+            this.rentStats = rentStats;
+
+            this.chartHeight = $("#chart").height();
+            this.chartWidth = $("#chart").width();
+        }
+        ChartView.prototype.setDepartureData = function (data) {
+            this.departures = data;
+            this.updateGraphic();
+        };
+
+        ChartView.prototype.updateGraphic = function () {
+            var xScale = this.createXScale();
+            var yScale = this.createYScale();
+
+            d3.select("#chart").selectAll("rect").data(this.rentStats).enter().append("rect").attr(this.rentRectAttrs(xScale, yScale));
+        };
+
+        ChartView.prototype.createXScale = function () {
+            var result = d3.scale.linear().domain([d3.min(this.rentStats, function (d) {
+                    return d.lowerQuartile;
+                }), d3.max(this.rentStats, function (d) {
+                    return d.upperQuartile;
+                })]).range([0, this.chartWidth]).nice();
+
+            return result;
+        };
+
+        ChartView.prototype.createYScale = function () {
+            var result = d3.scale.linear().domain([0, this.departures.arrivalTime - d3.min(this.departures.times, function (d) {
+                    return d.time;
+                })]).range([0, this.chartHeight]).nice();
+
+            return result;
+        };
+
+        ChartView.prototype.rentRectAttrs = function (xScale, yScale) {
+            var _this = this;
+            var departureTimeLookup = {};
+            this.departures.times.forEach(function (d) {
+                return departureTimeLookup[d.station] = d.time;
+            });
+
+            var result = {
+                x: function (d, i) {
+                    return xScale(d.lowerQuartile);
+                },
+                y: function (d, i) {
+                    return yScale(_this.departures.arrivalTime - departureTimeLookup[d.name]);
+                },
+                height: function () {
+                    return yScale(1) - yScale(0) - ChartView.barSpacing;
+                },
+                width: function (d) {
+                    return xScale(d.upperQuartile) - xScale(d.lowerQuartile);
+                },
+                opacity: 0.2
+            };
+
+            return result;
+        };
+        ChartView.barSpacing = 1;
+        return ChartView;
+    })();
+    CommutesAndRent.ChartView = ChartView;
 })(CommutesAndRent || (CommutesAndRent = {}));
 //# sourceMappingURL=commutes-and-rent.js.map

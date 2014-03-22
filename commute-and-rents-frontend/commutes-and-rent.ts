@@ -1,28 +1,15 @@
-﻿declare var document: any;
+﻿window.onload = () => {
+    new CommutesAndRent.Map();
+    new CommutesAndRent.ChartController();
 
-window.onload = () => {
-    var loader: CommutesAndRent.Loader = new CommutesAndRent.Loader();
-};
-
-module CommutesAndRent {
-
-    export class Loader {
-
-        constructor() {
-            var map: MapView = new MapView();
-            var chart: Chart = new Chart(() => map.getSelectedStation());
-        }
-    }
 }
 
+
 module CommutesAndRent {
+    
+    export class Map {
 
-    export class MapView {
-
-        public getSelectedStation(): string { return this.selectedStation; }
-        private selectedStation: string = "";
-
-        private map: L.Map;
+        private mapObject: L.Map;
 
         private static mapTileURLTemplate: string = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
         private static mapId: string = "coffeetable.hinlda0l";
@@ -30,125 +17,201 @@ module CommutesAndRent {
         private static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
         private static defaultZoom: number = 13;
 
+        private static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
+
         constructor() {
-            this.buildMap();
-            this.placeStationMarkers();
+
+            this.mapObject = Map.buildMap();
+
+            $.getJSON(Map.locationDataPath, (data) => Map.addMarkers(this.mapObject, data));
         }
 
-        private buildMap(): void 
-        {
-            this.map = L.map("map").setView(MapView.defaultCenter, MapView.defaultZoom);
-            var tileLayer: L.TileLayer = new L.TileLayer(MapView.mapTileURLTemplate, { mapid: MapView.mapId });
-            tileLayer.addTo(this.map);
+        private static buildMap(): L.Map {
+
+            var map: L.Map = L.map("map").setView(Map.defaultCenter, Map.defaultZoom);
+
+            new L.TileLayer(Map.mapTileURLTemplate, { mapid: Map.mapId }).addTo(map);
+
+            return map;
         }
 
-        private placeStationMarkers(): void
+        private static addMarkers(map: L.Map, locations: Location[]): void
         {
-            $.getJSON("preprocessor-output/processed-locations/locations.json", data => this.addStationLocations(data));
+            locations.forEach(loc => this.addMarker(map, loc));
         }
 
-        private addStationLocations(data: any): void
+        private static addMarker(map: L.Map, location: Location): void
         {
-            for (var i: number = 0; i < data.length; i++)
-            {
-                var name: string = data[i].name;
-                var latitude: number = data[i].latitude;
-                var longitude: number = data[i].longitude;
+            var latLng: L.LatLng = new L.LatLng(location.latitude, location.longitude);
 
-                var marker: L.Marker = L.marker(new L.LatLng(latitude, longitude), 10);
-                this.map.addLayer(marker);
-
-                (<StationMarker>marker).stationName = name;
-
-                marker.bindPopup(name);
-                marker.on("click", e => this.updateSelection(e));
-            }
-        }
-
-        private updateSelection(event: L.LeafletMouseEvent): void
-        {
-            var marker: StationMarker = <StationMarker>event.target;
-            this.selectedStation = marker.stationName;
+            new L.Marker(latLng).addTo(map);
         }
     }
 
-    interface StationMarker extends L.Marker {
-        stationName: string;
+    interface Location {
+
+        name: string;
+        longitude: number;
+        latitude: number;        
     }
 }
 
-module CommutesAndRent {
+module CommutesAndRent
+{
+    export class ChartModel {
 
-    interface RentStatistic {
+        public rents: RentStatistic[];
+        public arrivalTimes: number[];
+        
+        private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
+        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+
+        constructor(successContinuation: (model: ChartModel) => void) {
+
+            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadTimesData())
+                .then(() => successContinuation(this));
+        }
+        
+        public getDepartureData(time: number, stationName: string): JQueryXHR {
+
+            var filepath: string = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
+
+            return $.getJSON(filepath);
+        }
+
+        private loadRentData(filename: string): JQueryXHR {
+
+            var filepath: string = ChartModel.rentStatsFolder + filename;
+
+            return $.getJSON(filepath, (data) => { this.rents = data; return null; });
+        }
+
+
+        private loadTimesData(): JQueryXHR {
+
+            var filepath: string = ChartModel.departureTimesFolder + "times.json";
+
+            return $.getJSON(filepath, (data) => { this.arrivalTimes = data; return null; });
+        }
+    }
+
+    export interface RentStatistic {
         name: string;
         lowerQuartile: number;
         median: number;
         upperQuartile: number;
     }
 
-    interface DepartureTimes {
+    export interface DepartureTimes {
         arrivalTime: number;
         destination: string;
         times: DepartureTime[];
     }
 
-    interface DepartureTime {
+    export interface DepartureTime {
         station: string;
         time: number;
     }
+}
 
-    export class Chart
+module CommutesAndRent {
+
+    export class ChartController
     {
-        private getSelectedStation: () => string;
+        private model: ChartModel;
+        private view: ChartView;
+
+        private static defaultArrivalTime: number = 480;
+        private static defaultDestination: string = "Barbican";
+
+        constructor()
+        {
+            new ChartModel(this.initializeController);
+        }
+
+        private initializeController(model: ChartModel): void {
+
+            this.model = model;
+            this.view = new ChartView(model.rents);
+
+            model.getDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
+                .then((data) => this.view.setDepartureData(data));
+        }
+
+
+    }
+}
+
+module CommutesAndRent {
+
+    export class ChartView {
+
         private rentStats: RentStatistic[];
-        private departureTimes: DepartureTimes;
+        private departures: DepartureTimes;
 
-        private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
-        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+        private chartHeight: number;
+        private chartWidth: number;
 
-        private chartGraphic: D3.Selection;
+        private static barSpacing: number = 1;
 
-        constructor(getSelectedStation: () => string)
-        {
-            this.getSelectedStation = getSelectedStation;
-            this.initializeGraphic();
+        constructor(rentStats: RentStatistic[]) {
 
-            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadDepartureData("0900", "Baker Street"))
-                .done(() => this.updateGraphic());
+            this.rentStats = rentStats;
+
+            this.chartHeight = $("#chart").height();
+            this.chartWidth = $("#chart").width();
         }
 
-        private loadRentData(filename: string): any
-        {
-            var filepath: string = Chart.rentStatsFolder + filename;
+        public setDepartureData(data: DepartureTimes): void {
 
-            return $.getJSON(filepath, (data) => { this.rentStats = data; return null; });
+            this.departures = data;
+            this.updateGraphic();
         }
 
-        private loadDepartureData(time: string, stationName: string): any
-        {
-            var filepath: string = Chart.departureTimesFolder + time + "/" + stationName + ".json";
+        private updateGraphic(): void {
 
-            return $.getJSON(filepath, (data) => { this.departureTimes = data; return null; }); 
+            var xScale: D3.Scale.LinearScale = this.createXScale();
+            var yScale: D3.Scale.LinearScale = this.createYScale();
+
+            d3.select("#chart").selectAll("rect").data(this.rentStats).enter()
+                .append("rect")
+                .attr(this.rentRectAttrs(xScale, yScale));
         }
 
-        private initializeGraphic(): void
-        {
-            this.chartGraphic = d3.select("#chart").append("svg").attr({ width: "100%", height: "100%", overflow: "scroll" });
+        private createXScale(): D3.Scale.LinearScale {
+
+            var result: D3.Scale.LinearScale = d3.scale.linear()
+                .domain([d3.min(this.rentStats, d => d.lowerQuartile), d3.max(this.rentStats, d => d.upperQuartile)])
+                .range([0, this.chartWidth])
+                .nice();
+
+            return result;
         }
 
-        private updateGraphic(): void
-        {
-            this.chartGraphic.selectAll("text").data(this.rentStats).enter()
-                .append("text")
-                .text((d) => { return d.name; })
-                .attr("y", (d, i) => { return 20 * i; });
+        private createYScale(): D3.Scale.LinearScale {
 
-            this.chartGraphic.attr("height", this.rentStats.length * 20);
+            var result: D3.Scale.LinearScale = d3.scale.linear()
+                .domain([0, this.departures.arrivalTime - d3.min(this.departures.times, d => d.time)])
+                .range([0, this.chartHeight])
+                .nice();
+
+            return result;
         }
 
-        private drawRent(rentStat: RentStatistic, index: number): void
-        {
+        private rentRectAttrs(xScale: D3.Scale.LinearScale, yScale: D3.Scale.LinearScale): any {
 
+            var departureTimeLookup: any = {};
+            this.departures.times.forEach(d => departureTimeLookup[d.station] = d.time);
+
+            var result: any = {
+                x: (d, i) => xScale(d.lowerQuartile),
+                y: (d, i) => yScale(this.departures.arrivalTime - departureTimeLookup[d.name]),
+                height: () => yScale(1) - yScale(0) - ChartView.barSpacing,
+                width: d => xScale(d.upperQuartile) - xScale(d.lowerQuartile),
+                opacity: 0.2
+            };
+
+            return result;
         }
     }
 }

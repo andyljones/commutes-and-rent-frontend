@@ -15,5 +15,4 @@ html, body, #app {
     height: 100%;
     float: left;
     width: 50%;
-    overflow-y: scroll;
 }
