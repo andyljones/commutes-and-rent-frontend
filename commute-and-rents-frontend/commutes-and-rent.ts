@@ -77,35 +77,32 @@ module CommutesAndRent
 
         public rents: RentStatistic[];
         public arrivalTimes: number[];
+        public departureTimes: DepartureTimes;
         
         private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
         private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
 
-        public inititalize(): Q.Promise<void[]>
-        {
-            return Q.all([this.loadRentData("two-bedroom-rents.json"), this.loadTimesData()]);
+        public inititalize(): Q.Promise<void[]> {
+            return Q.all([this.loadTimesData()]);
         }
         
-        public getDepartureData(time: number, stationName: string): Q.Promise<any> {
-
+        public loadDepartureData(time: number, stationName: string): Q.Promise<void> {
             var filepath: string = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
 
-            return Q($.getJSON(filepath));
+            return Q($.getJSON(filepath)).then(data => { this.departureTimes = data; return null; });
         }
 
-        private loadRentData(filename: string): Q.Promise<void> {
-
+        public loadRentData(filename: string): Q.Promise<void> {
             var filepath: string = ChartModel.rentStatsFolder + filename;
 
-            return Q($.getJSON(filepath)).then(data => { this.rents = data; });
+            return Q($.getJSON(filepath)).then(data => { this.rents = data; return null; });
         }
 
 
         private loadTimesData(): Q.Promise<void> {
-
             var filepath: string = ChartModel.departureTimesFolder + "times.json";
 
-            return Q($.getJSON(filepath)).then(data => { this.arrivalTimes = data; });
+            return Q($.getJSON(filepath)).then(data => { this.arrivalTimes = data; return null; });
         }
     }
 
@@ -137,18 +134,22 @@ module CommutesAndRent {
 
         private static defaultArrivalTime: number = 480;
         private static defaultDestination: string = "Barbican";
+        private static defaultRentFile: string = "two-bedroom-rents.json";
 
         private currentArrivalTime: number;
         private currentDestination: string;
 
-        constructor()
-        {
+        constructor() { 
             this.model = new ChartModel();
-            this.model.inititalize().then(() => this.initializeController());
+            this.model.inititalize()
+                .then(() => Q.all([
+                    this.model.loadRentData(ChartController.defaultRentFile),
+                    this.model.loadDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
+                ]))
+                .then(() => this.initializeController());
         }
 
         private initializeController(): void {
-
             this.view = new ChartView(this.model.rents);
 
             this.currentArrivalTime = ChartController.defaultArrivalTime;
@@ -158,15 +159,13 @@ module CommutesAndRent {
         }
 
         public updateDestination(stationName: string) {
-
             this.currentDestination = stationName;
             this.updateView();
         }
 
         private updateView() {
-
-            this.model.getDepartureData(this.currentArrivalTime, this.currentDestination)
-                .then((data) => this.view.setDepartureData(data));
+            this.model.loadDepartureData(this.currentArrivalTime, this.currentDestination)
+                .then(() => this.view.setDepartureData(this.model.departureTimes));
         }
     }
 }
@@ -186,7 +185,6 @@ module CommutesAndRent {
         private static barSpacing: number = 1;
 
         constructor(rentStats: RentStatistic[]) {
-
             this.rentStats = rentStats;
 
             this.chartHeight = $("#chart").height();

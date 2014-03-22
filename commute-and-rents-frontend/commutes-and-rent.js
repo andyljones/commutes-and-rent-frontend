@@ -71,13 +71,17 @@ var CommutesAndRent;
         function ChartModel() {
         }
         ChartModel.prototype.inititalize = function () {
-            return Q.all([this.loadRentData("two-bedroom-rents.json"), this.loadTimesData()]);
+            return Q.all([this.loadTimesData()]);
         };
 
-        ChartModel.prototype.getDepartureData = function (time, stationName) {
+        ChartModel.prototype.loadDepartureData = function (time, stationName) {
+            var _this = this;
             var filepath = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
 
-            return Q($.getJSON(filepath));
+            return Q($.getJSON(filepath)).then(function (data) {
+                _this.departureTimes = data;
+                return null;
+            });
         };
 
         ChartModel.prototype.loadRentData = function (filename) {
@@ -86,6 +90,7 @@ var CommutesAndRent;
 
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.rents = data;
+                return null;
             });
         };
 
@@ -95,6 +100,7 @@ var CommutesAndRent;
 
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.arrivalTimes = data;
+                return null;
             });
         };
         ChartModel.rentStatsFolder = "preprocessor-output/processed-rents/";
@@ -111,6 +117,11 @@ var CommutesAndRent;
             var _this = this;
             this.model = new CommutesAndRent.ChartModel();
             this.model.inititalize().then(function () {
+                return Q.all([
+                    _this.model.loadRentData(ChartController.defaultRentFile),
+                    _this.model.loadDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
+                ]);
+            }).then(function () {
                 return _this.initializeController();
             });
         }
@@ -130,12 +141,13 @@ var CommutesAndRent;
 
         ChartController.prototype.updateView = function () {
             var _this = this;
-            this.model.getDepartureData(this.currentArrivalTime, this.currentDestination).then(function (data) {
-                return _this.view.setDepartureData(data);
+            this.model.loadDepartureData(this.currentArrivalTime, this.currentDestination).then(function () {
+                return _this.view.setDepartureData(_this.model.departureTimes);
             });
         };
         ChartController.defaultArrivalTime = 480;
         ChartController.defaultDestination = "Barbican";
+        ChartController.defaultRentFile = "two-bedroom-rents.json";
         return ChartController;
     })();
     CommutesAndRent.ChartController = ChartController;
