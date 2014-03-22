@@ -173,6 +173,8 @@ module CommutesAndRent {
 
         private chartWidth: number;
 
+        private currentlyExpanded: number;
+
         constructor(model: ChartModelView) {
             this.model = model;
             model.updateSubscriber = () => this.updateChart();
@@ -185,17 +187,31 @@ module CommutesAndRent {
         }
 
         private updateChart(): void {
-            var graphics = new Graphics(this.model.rents, this.model.commutes.times);
+            var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            var graphics = new Graphics(dataset);
 
-            var data: D3.UpdateSelection = this.svg.selectAll("rect").data(this.generateData(), rentTime => rentTime.name);
-            data.attr(graphics.rentRectAttrs);
+            var selection: D3.UpdateSelection = this.svg.selectAll("rect").data(dataset, rentTime => rentTime.name)
 
-            data.enter().append("rect").attr(graphics.rentRectAttrs);
+            selection.on('click', d => this.expandTime(selection, graphics, d))
+                .transition().attr(graphics.normalRentAttrs());
+
+            selection.enter().append("rect").attr(graphics.normalRentAttrs())
+                .on('click', d => this.expandTime(selection, graphics, d));
         }
 
-        private generateData() {
-            var departureLookup: D3.Map = this.model.commutes.times.reduce((m: D3.Map, d: DepartureTime) => { m.set(d.station, d.time); return m; }, d3.map());
-            var rentTimes: RentTime[] = this.model.rents.map(rent => new RentTime(rent, departureLookup.get(rent.name)));
+        private expandTime(data: D3.UpdateSelection, graphics: Graphics, d: RentTime): void {
+            if (d.time === this.currentlyExpanded) {
+                data.transition().attr(graphics.normalRentAttrs());
+                this.currentlyExpanded = null;
+            } else {
+                data.transition().attr(graphics.expandedRentAttrs(d.time));
+                this.currentlyExpanded = d.time;
+            }
+        }
+
+        private static generateDataset(rents: RentStatistic[], departures: DepartureTime[]) {
+            var departureLookup: D3.Map = departures.reduce((m: D3.Map, d: DepartureTime) => { m.set(d.station, d.time); return m; }, d3.map());
+            var rentTimes: RentTime[] = rents.map(rent => new RentTime(rent, departureLookup.get(rent.name)));
 
             return rentTimes;
         }
@@ -224,39 +240,80 @@ module CommutesAndRent {
 
     export class Graphics {
 
-        public rentRectAttrs: any = {
-            x: (d: RentTime) => this.xScale(d.lowerQuartile),
-            y: (d: RentTime) => this.yScale(d.time),
-            height: 10,
-            width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile)
-        };
-
         private xScale: D3.Scale.LinearScale;
         private yScale: D3.Scale.LinearScale;
 
         private static pixelsPerMinute = 10;
 
-        constructor(rentStats: RentStatistic[], departures: DepartureTime[]) {
-            this.xScale = this.makeXScale(rentStats);
-            this.yScale = this.makeYScale(departures);
+        private sizes: D3.Map = d3.map();
+        private indices: D3.Map = d3.map();
+
+        constructor(dataset: RentTime[]) {
+            this.xScale = this.makeXScale(dataset);
+            this.yScale = this.makeYScale(dataset);
+
+            this.calculateOffsets(dataset);
         }
 
-        private makeXScale(rentStats: RentStatistic[]): D3.Scale.LinearScale {
-            var lowestRent: number = d3.min(rentStats, stat => stat.lowerQuartile);
-            var highestRent: number = d3.max(rentStats, stat => stat.upperQuartile);
+        private calculateOffsets(dataset: RentTime[]): void {
+            for (var i: number = 0; i < dataset.length; i++) {
+
+                var count = this.sizes[dataset[i].time];
+
+                if (typeof count === "number") {
+                    this.indices[dataset[i].name] = count;
+                    this.sizes[dataset[i].time] = count + 1;
+                } else {
+                    this.indices[dataset[i].name] = 0;
+                    this.sizes[dataset[i].time] = 1;
+                }
+            } 
+        }
+
+        private makeXScale(dataset: RentTime[]): D3.Scale.LinearScale {
+            var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
+            var highestRent: number = d3.max(dataset, stat => stat.upperQuartile);
 
             return d3.scale.linear()
                 .domain([lowestRent, highestRent])
                 .range([0, $("#chart").width()]);
         }
 
-        private makeYScale(departures: DepartureTime[]): D3.Scale.LinearScale {
-            var times: number[] = departures.map(departure => departure.time);
+        private makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
+            var times: number[] = dataset.map(departure => departure.time);
             var range: number = d3.max(times) - d3.min(times);
 
             return d3.scale.linear()
                 .domain([d3.max(times), d3.min(times)])
-                .range([0, Graphics.pixelsPerMinute * range]);
+                .range([0, Graphics.pixelsPerMinute*range]);
+        }
+
+        public normalRentAttrs(): any {
+            return {
+                x: (d: RentTime) => this.xScale(d.lowerQuartile),
+                y: (d: RentTime) => this.yScale(d.time),
+                height: 10,
+                width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
+                opacity: 0.2
+            };
+        }
+
+        public expandedRentAttrs(expandedTime: number): any {
+            return {
+                y: (d: RentTime) => this.yScale(this.offset(d, expandedTime))
+            };
+        }
+
+        private offset(d: RentTime, expandedTime: number): number {
+            if (d.time < expandedTime) {
+                return d.time - (this.sizes[expandedTime] - 1);
+            }
+            else if (d.time === expandedTime) {
+                return d.time - this.indices[d.name];
+            }
+            else {
+                return d.time;
+            }
         }
     }
 }

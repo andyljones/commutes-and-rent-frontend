@@ -164,22 +164,39 @@ var CommutesAndRent;
             this.updateChart();
         }
         ChartView.prototype.updateChart = function () {
-            var graphics = new CommutesAndRent.Graphics(this.model.rents, this.model.commutes.times);
+            var _this = this;
+            var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            var graphics = new CommutesAndRent.Graphics(dataset);
 
-            var data = this.svg.selectAll("rect").data(this.generateData(), function (rentTime) {
+            var selection = this.svg.selectAll("rect").data(dataset, function (rentTime) {
                 return rentTime.name;
             });
-            data.attr(graphics.rentRectAttrs);
 
-            data.enter().append("rect").attr(graphics.rentRectAttrs);
+            selection.on('click', function (d) {
+                return _this.expandTime(selection, graphics, d);
+            }).transition().attr(graphics.normalRentAttrs());
+
+            selection.enter().append("rect").attr(graphics.normalRentAttrs()).on('click', function (d) {
+                return _this.expandTime(selection, graphics, d);
+            });
         };
 
-        ChartView.prototype.generateData = function () {
-            var departureLookup = this.model.commutes.times.reduce(function (m, d) {
+        ChartView.prototype.expandTime = function (data, graphics, d) {
+            if (d.time === this.currentlyExpanded) {
+                data.transition().attr(graphics.normalRentAttrs());
+                this.currentlyExpanded = null;
+            } else {
+                data.transition().attr(graphics.expandedRentAttrs(d.time));
+                this.currentlyExpanded = d.time;
+            }
+        };
+
+        ChartView.generateDataset = function (rents, departures) {
+            var departureLookup = departures.reduce(function (m, d) {
                 m.set(d.station, d.time);
                 return m;
             }, d3.map());
-            var rentTimes = this.model.rents.map(function (rent) {
+            var rentTimes = rents.map(function (rent) {
                 return new RentTime(rent, departureLookup.get(rent.name));
             });
 
@@ -206,9 +223,51 @@ var CommutesAndRent;
 var CommutesAndRent;
 (function (CommutesAndRent) {
     var Graphics = (function () {
-        function Graphics(rentStats, departures) {
+        function Graphics(dataset) {
+            this.sizes = d3.map();
+            this.indices = d3.map();
+            this.xScale = this.makeXScale(dataset);
+            this.yScale = this.makeYScale(dataset);
+
+            this.calculateOffsets(dataset);
+        }
+        Graphics.prototype.calculateOffsets = function (dataset) {
+            for (var i = 0; i < dataset.length; i++) {
+                var count = this.sizes[dataset[i].time];
+
+                if (typeof count === "number") {
+                    this.indices[dataset[i].name] = count;
+                    this.sizes[dataset[i].time] = count + 1;
+                } else {
+                    this.indices[dataset[i].name] = 0;
+                    this.sizes[dataset[i].time] = 1;
+                }
+            }
+        };
+
+        Graphics.prototype.makeXScale = function (dataset) {
+            var lowestRent = d3.min(dataset, function (stat) {
+                return stat.lowerQuartile;
+            });
+            var highestRent = d3.max(dataset, function (stat) {
+                return stat.upperQuartile;
+            });
+
+            return d3.scale.linear().domain([lowestRent, highestRent]).range([0, $("#chart").width()]);
+        };
+
+        Graphics.prototype.makeYScale = function (dataset) {
+            var times = dataset.map(function (departure) {
+                return departure.time;
+            });
+            var range = d3.max(times) - d3.min(times);
+
+            return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([0, Graphics.pixelsPerMinute * range]);
+        };
+
+        Graphics.prototype.normalRentAttrs = function () {
             var _this = this;
-            this.rentRectAttrs = {
+            return {
                 x: function (d) {
                     return _this.xScale(d.lowerQuartile);
                 },
@@ -218,29 +277,28 @@ var CommutesAndRent;
                 height: 10,
                 width: function (d) {
                     return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
-                }
+                },
+                opacity: 0.2
             };
-            this.xScale = this.makeXScale(rentStats);
-            this.yScale = this.makeYScale(departures);
-        }
-        Graphics.prototype.makeXScale = function (rentStats) {
-            var lowestRent = d3.min(rentStats, function (stat) {
-                return stat.lowerQuartile;
-            });
-            var highestRent = d3.max(rentStats, function (stat) {
-                return stat.upperQuartile;
-            });
-
-            return d3.scale.linear().domain([lowestRent, highestRent]).range([0, $("#chart").width()]);
         };
 
-        Graphics.prototype.makeYScale = function (departures) {
-            var times = departures.map(function (departure) {
-                return departure.time;
-            });
-            var range = d3.max(times) - d3.min(times);
+        Graphics.prototype.expandedRentAttrs = function (expandedTime) {
+            var _this = this;
+            return {
+                y: function (d) {
+                    return _this.yScale(_this.offset(d, expandedTime));
+                }
+            };
+        };
 
-            return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([0, Graphics.pixelsPerMinute * range]);
+        Graphics.prototype.offset = function (d, expandedTime) {
+            if (d.time < expandedTime) {
+                return d.time - (this.sizes[expandedTime] - 1);
+            } else if (d.time === expandedTime) {
+                return d.time - this.indices[d.name];
+            } else {
+                return d.time;
+            }
         };
         Graphics.pixelsPerMinute = 10;
         return Graphics;
