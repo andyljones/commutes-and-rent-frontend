@@ -154,32 +154,38 @@ var CommutesAndRent;
             var _this = this;
             this.model = model;
             model.updateSubscriber = function () {
-                return _this.updateChart();
+                return _this.update();
             };
 
             this.svg = d3.select("#chart");
 
-            this.updateChart();
+            this.initialize();
         }
-        ChartView.prototype.updateChart = function () {
+        ChartView.prototype.initialize = function () {
             var _this = this;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = this.svg.selectAll("rect").data(dataset, function (rentTime) {
-                return rentTime.name;
-            });
-
-            selection.on('click', function (d) {
-                return _this.expandTime(selection, graphics, d);
-            }).transition().attr(graphics.normalRentAttrs());
-
-            selection.enter().append("rect").attr(graphics.normalRentAttrs()).on('click', function (d) {
-                return _this.expandTime(selection, graphics, d);
+            this.svg.selectAll("rect").data(dataset).enter().append("rect").attr(graphics.normalRentAttrs()).on('click', function (d) {
+                return _this.expandTime(graphics, d);
             });
         };
 
-        ChartView.prototype.expandTime = function (data, graphics, d) {
+        ChartView.prototype.update = function () {
+            var _this = this;
+            var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            var graphics = new CommutesAndRent.Graphics(dataset);
+
+            this.svg.selectAll("rect").data(dataset, function (rentTime) {
+                return rentTime.name;
+            }).on('click', function (d) {
+                return _this.expandTime(graphics, d);
+            }).transition().attr(graphics.normalRentAttrs());
+        };
+
+        ChartView.prototype.expandTime = function (graphics, d) {
+            var data = this.svg.selectAll("rect");
+
             if (d.time === this.currentlyExpanded) {
                 data.transition().attr(graphics.normalRentAttrs());
                 this.currentlyExpanded = null;

@@ -175,28 +175,34 @@ module CommutesAndRent {
 
         constructor(model: ChartModelView) {
             this.model = model;
-            model.updateSubscriber = () => this.updateChart();
+            model.updateSubscriber = () => this.update();
 
             this.svg = d3.select("#chart");
 
-            this.updateChart();
+            this.initialize();
         }
 
-        private updateChart(): void {
+        private initialize(): void {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new Graphics(dataset);
 
-            var selection: D3.UpdateSelection = this.svg.selectAll("rect").data(dataset, rentTime => rentTime.name)
-
-            selection
-                .on('click', d => this.expandTime(selection, graphics, d))
-                .transition().attr(graphics.normalRentAttrs());
-
-            selection.enter().append("rect").attr(graphics.normalRentAttrs())
-                .on('click', d => this.expandTime(selection, graphics, d));
+            this.svg.selectAll("rect").data(dataset)
+                .enter().append("rect").attr(graphics.normalRentAttrs())
+                .on('click', d => this.expandTime(graphics, d));
         }
 
-        private expandTime(data: D3.UpdateSelection, graphics: Graphics, d: RentTime): void {
+        private update(): void {
+            var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            var graphics = new Graphics(dataset);
+
+            this.svg.selectAll("rect").data(dataset, rentTime => rentTime.name)
+                .on('click', d => this.expandTime(graphics, d))
+                .transition().attr(graphics.normalRentAttrs());
+        }
+
+        private expandTime(graphics: Graphics, d: RentTime): void {
+            var data = this.svg.selectAll("rect");
+
             if (d.time === this.currentlyExpanded) {
                 data.transition().attr(graphics.normalRentAttrs());
                 this.currentlyExpanded = null;
@@ -251,7 +257,6 @@ module CommutesAndRent {
 
         private xScale: D3.Scale.LinearScale;
         private yScale: D3.Scale.LinearScale;
-
 
         private sizes: D3.Map = d3.map();
         private indices: D3.Map = d3.map();
