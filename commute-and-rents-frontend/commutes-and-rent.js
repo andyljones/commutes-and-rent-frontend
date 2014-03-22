@@ -20,7 +20,7 @@ var CommutesAndRent;
             var _this = this;
             this.mapObject = Map.buildMap();
 
-            $.getJSON(Map.locationDataPath, function (data) {
+            Q($.getJSON(Map.locationDataPath)).then(function (data) {
                 return _this.addMarkers(data);
             });
         }
@@ -68,25 +68,24 @@ var CommutesAndRent;
 var CommutesAndRent;
 (function (CommutesAndRent) {
     var ChartModel = (function () {
-        function ChartModel(successContinuation) {
-            var _this = this;
-            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadTimesData()).then(function () {
-                return successContinuation(_this);
-            });
+        function ChartModel() {
         }
+        ChartModel.prototype.inititalize = function () {
+            return Q.all([this.loadRentData("two-bedroom-rents.json"), this.loadTimesData()]);
+        };
+
         ChartModel.prototype.getDepartureData = function (time, stationName) {
             var filepath = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
 
-            return $.getJSON(filepath);
+            return Q($.getJSON(filepath));
         };
 
         ChartModel.prototype.loadRentData = function (filename) {
             var _this = this;
             var filepath = ChartModel.rentStatsFolder + filename;
 
-            return $.getJSON(filepath, function (data) {
+            return Q($.getJSON(filepath)).then(function (data) {
                 _this.rents = data;
-                return null;
             });
         };
 
@@ -94,9 +93,8 @@ var CommutesAndRent;
             var _this = this;
             var filepath = ChartModel.departureTimesFolder + "times.json";
 
-            return $.getJSON(filepath, function (data) {
+            return Q($.getJSON(filepath)).then(function (data) {
                 _this.arrivalTimes = data;
-                return null;
             });
         };
         ChartModel.rentStatsFolder = "preprocessor-output/processed-rents/";
@@ -111,13 +109,13 @@ var CommutesAndRent;
     var ChartController = (function () {
         function ChartController() {
             var _this = this;
-            new CommutesAndRent.ChartModel(function (model) {
-                return _this.initializeController(model);
+            this.model = new CommutesAndRent.ChartModel();
+            this.model.inititalize().then(function () {
+                return _this.initializeController();
             });
         }
-        ChartController.prototype.initializeController = function (model) {
-            this.model = model;
-            this.view = new CommutesAndRent.ChartView(model.rents);
+        ChartController.prototype.initializeController = function () {
+            this.view = new CommutesAndRent.ChartView(this.model.rents);
 
             this.currentArrivalTime = ChartController.defaultArrivalTime;
             this.currentDestination = ChartController.defaultDestination;

@@ -29,6 +29,7 @@
     <Content Include="library\leaflet\leaflet.css" />
     <Content Include="library\leaflet\leaflet.js" />
     <None Include="preprocessor-output\processed-departure-times\times.json" />
+    <Content Include="library\q\q.js" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -37,6 +38,7 @@
     <TypeScriptCompile Include="library\d3\d3.d.ts" />
     <TypeScriptCompile Include="library\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="library\leaflet\leaflet.d.ts" />
+    <TypeScriptCompile Include="library\q\Q.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="preprocessor-output\processed-departure-times\480\Acton Town.json" />

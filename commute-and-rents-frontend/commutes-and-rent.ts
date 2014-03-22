@@ -26,7 +26,7 @@ module CommutesAndRent {
 
             this.mapObject = Map.buildMap();
 
-            $.getJSON(Map.locationDataPath, (data) => this.addMarkers(data));
+            Q($.getJSON(Map.locationDataPath)).then(data => this.addMarkers(data));
         }
 
         private static buildMap(): L.Map {
@@ -81,32 +81,31 @@ module CommutesAndRent
         private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
         private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
 
-        constructor(successContinuation: (model: ChartModel) => void) {
-
-            $.when(this.loadRentData("two-bedroom-rents.json"), this.loadTimesData())
-                .then(() => successContinuation(this));
+        public inititalize(): Q.Promise<void[]>
+        {
+            return Q.all([this.loadRentData("two-bedroom-rents.json"), this.loadTimesData()]);
         }
         
-        public getDepartureData(time: number, stationName: string): JQueryXHR {
+        public getDepartureData(time: number, stationName: string): Q.Promise<any> {
 
             var filepath: string = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
 
-            return $.getJSON(filepath);
+            return Q($.getJSON(filepath));
         }
 
-        private loadRentData(filename: string): JQueryXHR {
+        private loadRentData(filename: string): Q.Promise<void> {
 
             var filepath: string = ChartModel.rentStatsFolder + filename;
 
-            return $.getJSON(filepath, (data) => { this.rents = data; return null; });
+            return Q($.getJSON(filepath)).then(data => { this.rents = data; });
         }
 
 
-        private loadTimesData(): JQueryXHR {
+        private loadTimesData(): Q.Promise<void> {
 
             var filepath: string = ChartModel.departureTimesFolder + "times.json";
 
-            return $.getJSON(filepath, (data) => { this.arrivalTimes = data; return null; });
+            return Q($.getJSON(filepath)).then(data => { this.arrivalTimes = data; });
         }
     }
 
@@ -144,13 +143,13 @@ module CommutesAndRent {
 
         constructor()
         {
-            new ChartModel((model: ChartModel) => this.initializeController(model));
+            this.model = new ChartModel();
+            this.model.inititalize().then(() => this.initializeController());
         }
 
-        private initializeController(model: ChartModel): void {
+        private initializeController(): void {
 
-            this.model = model;
-            this.view = new ChartView(model.rents);
+            this.view = new ChartView(this.model.rents);
 
             this.currentArrivalTime = ChartController.defaultArrivalTime;
             this.currentDestination = ChartController.defaultDestination;
