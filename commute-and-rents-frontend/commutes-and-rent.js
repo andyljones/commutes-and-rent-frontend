@@ -18,6 +18,8 @@ var CommutesAndRent;
     var Map = (function () {
         function Map() {
             var _this = this;
+            this.markerSubscriber = function () {
+            };
             this.mapObject = Map.buildMap();
 
             Q($.getJSON(Map.locationDataPath)).then(function (data) {
@@ -69,17 +71,31 @@ var CommutesAndRent;
 (function (CommutesAndRent) {
     var ChartModel = (function () {
         function ChartModel() {
+            this.updateSubscriber = function () {
+            };
         }
-        ChartModel.prototype.inititalize = function () {
+        ChartModel.prototype.initialize = function () {
             return Q.all([this.loadTimesData()]);
         };
 
-        ChartModel.prototype.loadDepartureData = function (time, stationName) {
+        ChartModel.prototype.loadTimesData = function () {
+            var _this = this;
+            var filepath = ChartModel.departureTimesFolder + "times.json";
+
+            return Q($.getJSON(filepath)).then(function (data) {
+                _this.arrivalTimes = data;
+                _this.updateSubscriber();
+                return null;
+            });
+        };
+
+        ChartModel.prototype.loadCommuteData = function (time, stationName) {
             var _this = this;
             var filepath = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
 
             return Q($.getJSON(filepath)).then(function (data) {
-                _this.departureTimes = data;
+                _this.commutes = data;
+                _this.updateSubscriber();
                 return null;
             });
         };
@@ -90,16 +106,7 @@ var CommutesAndRent;
 
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.rents = data;
-                return null;
-            });
-        };
-
-        ChartModel.prototype.loadTimesData = function () {
-            var _this = this;
-            var filepath = ChartModel.departureTimesFolder + "times.json";
-
-            return Q($.getJSON(filepath)).then(function (data) {
-                _this.arrivalTimes = data;
+                _this.updateSubscriber();
                 return null;
             });
         };
@@ -116,34 +123,21 @@ var CommutesAndRent;
         function ChartController() {
             var _this = this;
             this.model = new CommutesAndRent.ChartModel();
-            this.model.inititalize().then(function () {
+            this.model.initialize().then(function () {
                 return Q.all([
                     _this.model.loadRentData(ChartController.defaultRentFile),
-                    _this.model.loadDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
+                    _this.model.loadCommuteData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
                 ]);
             }).then(function () {
-                return _this.initializeController();
+                return _this.initialize();
             });
         }
-        ChartController.prototype.initializeController = function () {
-            this.view = new CommutesAndRent.ChartView(this.model.rents);
-
-            this.currentArrivalTime = ChartController.defaultArrivalTime;
-            this.currentDestination = ChartController.defaultDestination;
-
-            this.updateView();
+        ChartController.prototype.initialize = function () {
+            this.view = new CommutesAndRent.ChartView(this.model);
         };
 
         ChartController.prototype.updateDestination = function (stationName) {
-            this.currentDestination = stationName;
-            this.updateView();
-        };
-
-        ChartController.prototype.updateView = function () {
-            var _this = this;
-            this.model.loadDepartureData(this.currentArrivalTime, this.currentDestination).then(function () {
-                return _this.view.setDepartureData(_this.model.departureTimes);
-            });
+            this.model.loadCommuteData(this.model.commutes.arrivalTime, stationName);
         };
         ChartController.defaultArrivalTime = 480;
         ChartController.defaultDestination = "Barbican";
@@ -156,74 +150,21 @@ var CommutesAndRent;
 var CommutesAndRent;
 (function (CommutesAndRent) {
     var ChartView = (function () {
-        function ChartView(rentStats) {
-            this.rentStats = rentStats;
+        function ChartView(model) {
+            var _this = this;
+            this.model = model;
+            model.updateSubscriber = function () {
+                return _this.updateChart();
+            };
 
             this.chartHeight = $("#chart").height();
             this.chartWidth = $("#chart").width();
-
-            this.rects = ChartView.createGraphic(rentStats);
         }
-        ChartView.createGraphic = function (rentStats) {
-            return d3.select("#chart").selectAll("*").data(rentStats).enter().append("rect");
-        };
-
-        ChartView.prototype.setDepartureData = function (data) {
-            this.departures = data;
-            this.updateGraphic();
-        };
-
-        ChartView.prototype.updateGraphic = function () {
-            var xScale = this.createXScale();
-            var yScale = this.createYScale();
-
-            this.rects.data(this.rentStats).attr(this.rentRectAttrs(xScale, yScale));
-        };
-
-        ChartView.prototype.createXScale = function () {
-            var result = d3.scale.linear().domain([d3.min(this.rentStats, function (d) {
-                    return d.lowerQuartile;
-                }), d3.max(this.rentStats, function (d) {
-                    return d.upperQuartile;
-                })]).range([0, this.chartWidth]).nice();
-
-            return result;
-        };
-
-        ChartView.prototype.createYScale = function () {
-            var result = d3.scale.linear().domain([0, this.departures.arrivalTime - d3.min(this.departures.times, function (d) {
-                    return d.time;
-                })]).range([0, this.chartHeight]).nice();
-
-            return result;
-        };
-
-        ChartView.prototype.rentRectAttrs = function (xScale, yScale) {
-            var _this = this;
-            var departureTimeLookup = {};
-            this.departures.times.forEach(function (d) {
-                return departureTimeLookup[d.station] = d.time;
-            });
-
-            var result = {
-                x: function (d, i) {
-                    return xScale(d.lowerQuartile);
-                },
-                y: function (d, i) {
-                    return yScale(_this.departures.arrivalTime - departureTimeLookup[d.name]);
-                },
-                height: function () {
-                    return yScale(1) - yScale(0) - ChartView.barSpacing;
-                },
-                width: function (d) {
-                    return xScale(d.upperQuartile) - xScale(d.lowerQuartile);
-                },
-                opacity: 0.2
-            };
-
-            return result;
+        ChartView.prototype.updateChart = function () {
+            console.log(this.model.commutes.destination);
         };
         ChartView.barSpacing = 1;
+        ChartView.barHeight = 10;
         return ChartView;
     })();
     CommutesAndRent.ChartView = ChartView;
