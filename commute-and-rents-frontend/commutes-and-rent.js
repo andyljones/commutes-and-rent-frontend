@@ -1,6 +1,16 @@
-﻿window.onload = function () {
-    new CommutesAndRent.Map();
-    new CommutesAndRent.ChartController();
+﻿var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+window.onload = function () {
+    var map = new CommutesAndRent.Map();
+    var controller = new CommutesAndRent.ChartController();
+
+    map.markerSubscriber = function (name) {
+        return controller.updateDestination(name);
+    };
 };
 
 var CommutesAndRent;
@@ -11,7 +21,7 @@ var CommutesAndRent;
             this.mapObject = Map.buildMap();
 
             $.getJSON(Map.locationDataPath, function (data) {
-                return Map.addMarkers(_this.mapObject, data);
+                return _this.addMarkers(data);
             });
         }
         Map.buildMap = function () {
@@ -22,17 +32,15 @@ var CommutesAndRent;
             return map;
         };
 
-        Map.addMarkers = function (map, locations) {
+        Map.prototype.addMarkers = function (locations) {
             var _this = this;
-            locations.forEach(function (loc) {
-                return _this.addMarker(map, loc);
-            });
-        };
+            for (var i = 0; i < locations.length; i++) {
+                var latLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-        Map.addMarker = function (map, location) {
-            var latLng = new L.LatLng(location.latitude, location.longitude);
-
-            new L.Marker(latLng).addTo(map);
+                new StationMarker(locations[i].name, latLng).addTo(this.mapObject).on('click', function (e) {
+                    return _this.markerSubscriber(e.target.name);
+                });
+            }
         };
         Map.mapTileURLTemplate = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
         Map.mapId = "coffeetable.hinlda0l";
@@ -44,6 +52,17 @@ var CommutesAndRent;
         return Map;
     })();
     CommutesAndRent.Map = Map;
+
+    var StationMarker = (function (_super) {
+        __extends(StationMarker, _super);
+        function StationMarker(name, latLng, options) {
+            _super.call(this, latLng, options);
+
+            this.name = name;
+        }
+        return StationMarker;
+    })(L.Marker);
+    CommutesAndRent.StationMarker = StationMarker;
 })(CommutesAndRent || (CommutesAndRent = {}));
 
 var CommutesAndRent;
@@ -91,14 +110,29 @@ var CommutesAndRent;
 (function (CommutesAndRent) {
     var ChartController = (function () {
         function ChartController() {
-            new CommutesAndRent.ChartModel(this.initializeController);
+            var _this = this;
+            new CommutesAndRent.ChartModel(function (model) {
+                return _this.initializeController(model);
+            });
         }
         ChartController.prototype.initializeController = function (model) {
-            var _this = this;
             this.model = model;
             this.view = new CommutesAndRent.ChartView(model.rents);
 
-            model.getDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination).then(function (data) {
+            this.currentArrivalTime = ChartController.defaultArrivalTime;
+            this.currentDestination = ChartController.defaultDestination;
+
+            this.updateView();
+        };
+
+        ChartController.prototype.updateDestination = function (stationName) {
+            this.currentDestination = stationName;
+            this.updateView();
+        };
+
+        ChartController.prototype.updateView = function () {
+            var _this = this;
+            this.model.getDepartureData(this.currentArrivalTime, this.currentDestination).then(function (data) {
                 return _this.view.setDepartureData(data);
             });
         };
@@ -117,7 +151,13 @@ var CommutesAndRent;
 
             this.chartHeight = $("#chart").height();
             this.chartWidth = $("#chart").width();
+
+            this.rects = ChartView.createGraphic(rentStats);
         }
+        ChartView.createGraphic = function (rentStats) {
+            return d3.select("#chart").selectAll("*").data(rentStats).enter().append("rect");
+        };
+
         ChartView.prototype.setDepartureData = function (data) {
             this.departures = data;
             this.updateGraphic();
@@ -127,7 +167,7 @@ var CommutesAndRent;
             var xScale = this.createXScale();
             var yScale = this.createYScale();
 
-            d3.select("#chart").selectAll("rect").data(this.rentStats).enter().append("rect").attr(this.rentRectAttrs(xScale, yScale));
+            this.rects.data(this.rentStats).attr(this.rentRectAttrs(xScale, yScale));
         };
 
         ChartView.prototype.createXScale = function () {

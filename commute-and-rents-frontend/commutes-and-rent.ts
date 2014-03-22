@@ -1,13 +1,16 @@
 ﻿window.onload = () => {
-    new CommutesAndRent.Map();
-    new CommutesAndRent.ChartController();
+    var map: CommutesAndRent.Map = new CommutesAndRent.Map();
+    var controller: CommutesAndRent.ChartController = new CommutesAndRent.ChartController();
 
+    map.markerSubscriber = (name: string) => controller.updateDestination(name);
 }
 
 
 module CommutesAndRent {
     
     export class Map {
+
+        public markerSubscriber: (name: string) => void;
 
         private mapObject: L.Map;
 
@@ -23,7 +26,7 @@ module CommutesAndRent {
 
             this.mapObject = Map.buildMap();
 
-            $.getJSON(Map.locationDataPath, (data) => Map.addMarkers(this.mapObject, data));
+            $.getJSON(Map.locationDataPath, (data) => this.addMarkers(data));
         }
 
         private static buildMap(): L.Map {
@@ -35,17 +38,18 @@ module CommutesAndRent {
             return map;
         }
 
-        private static addMarkers(map: L.Map, locations: Location[]): void
+        private addMarkers(locations: Location[]): void
         {
-            locations.forEach(loc => this.addMarker(map, loc));
+            for (var i: number = 0; i < locations.length; i++)
+            {
+                var latLng: L.LatLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
+
+                new StationMarker(locations[i].name, latLng)
+                    .addTo(this.mapObject)
+                    .on('click', (e: L.LeafletMouseEvent) => this.markerSubscriber(e.target.name));
+            }
         }
 
-        private static addMarker(map: L.Map, location: Location): void
-        {
-            var latLng: L.LatLng = new L.LatLng(location.latitude, location.longitude);
-
-            new L.Marker(latLng).addTo(map);
-        }
     }
 
     interface Location {
@@ -53,6 +57,17 @@ module CommutesAndRent {
         name: string;
         longitude: number;
         latitude: number;        
+    }
+
+    export class StationMarker extends L.Marker {
+
+        public name: string;
+
+        constructor(name: string, latLng: L.LatLng, options?: any) {
+            super(latLng, options);
+
+            this.name = name;
+        }
     }
 }
 
@@ -124,9 +139,12 @@ module CommutesAndRent {
         private static defaultArrivalTime: number = 480;
         private static defaultDestination: string = "Barbican";
 
+        private currentArrivalTime: number;
+        private currentDestination: string;
+
         constructor()
         {
-            new ChartModel(this.initializeController);
+            new ChartModel((model: ChartModel) => this.initializeController(model));
         }
 
         private initializeController(model: ChartModel): void {
@@ -134,11 +152,23 @@ module CommutesAndRent {
             this.model = model;
             this.view = new ChartView(model.rents);
 
-            model.getDepartureData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
-                .then((data) => this.view.setDepartureData(data));
+            this.currentArrivalTime = ChartController.defaultArrivalTime;
+            this.currentDestination = ChartController.defaultDestination;
+
+            this.updateView();
         }
 
+        public updateDestination(stationName: string) {
 
+            this.currentDestination = stationName;
+            this.updateView();
+        }
+
+        private updateView() {
+
+            this.model.getDepartureData(this.currentArrivalTime, this.currentDestination)
+                .then((data) => this.view.setDepartureData(data));
+        }
     }
 }
 
@@ -148,6 +178,8 @@ module CommutesAndRent {
 
         private rentStats: RentStatistic[];
         private departures: DepartureTimes;
+
+        private rects: D3.Selection;
 
         private chartHeight: number;
         private chartWidth: number;
@@ -160,26 +192,28 @@ module CommutesAndRent {
 
             this.chartHeight = $("#chart").height();
             this.chartWidth = $("#chart").width();
+
+            this.rects = ChartView.createGraphic(rentStats);
+        }
+
+        private static createGraphic(rentStats: RentStatistic[]): D3.Selection {
+            return d3.select("#chart").selectAll("*").data(rentStats).enter().append("rect");
         }
 
         public setDepartureData(data: DepartureTimes): void {
-
             this.departures = data;
             this.updateGraphic();
         }
 
         private updateGraphic(): void {
-
             var xScale: D3.Scale.LinearScale = this.createXScale();
             var yScale: D3.Scale.LinearScale = this.createYScale();
 
-            d3.select("#chart").selectAll("rect").data(this.rentStats).enter()
-                .append("rect")
+            this.rects.data(this.rentStats)
                 .attr(this.rentRectAttrs(xScale, yScale));
         }
 
         private createXScale(): D3.Scale.LinearScale {
-
             var result: D3.Scale.LinearScale = d3.scale.linear()
                 .domain([d3.min(this.rentStats, d => d.lowerQuartile), d3.max(this.rentStats, d => d.upperQuartile)])
                 .range([0, this.chartWidth])
@@ -189,7 +223,6 @@ module CommutesAndRent {
         }
 
         private createYScale(): D3.Scale.LinearScale {
-
             var result: D3.Scale.LinearScale = d3.scale.linear()
                 .domain([0, this.departures.arrivalTime - d3.min(this.departures.times, d => d.time)])
                 .range([0, this.chartHeight])
@@ -199,7 +232,6 @@ module CommutesAndRent {
         }
 
         private rentRectAttrs(xScale: D3.Scale.LinearScale, yScale: D3.Scale.LinearScale): any {
-
             var departureTimeLookup: any = {};
             this.departures.times.forEach(d => departureTimeLookup[d.station] = d.time);
 
