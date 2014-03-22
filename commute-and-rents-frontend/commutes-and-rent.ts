@@ -171,8 +171,6 @@ module CommutesAndRent {
 
         private svg: D3.Selection;
 
-        private chartWidth: number;
-
         private currentlyExpanded: number;
 
         constructor(model: ChartModelView) {
@@ -180,8 +178,6 @@ module CommutesAndRent {
             model.updateSubscriber = () => this.updateChart();
 
             this.svg = d3.select("#chart");
-
-            this.chartWidth = $("#chart").width();
 
             this.updateChart();
         }
@@ -192,7 +188,8 @@ module CommutesAndRent {
 
             var selection: D3.UpdateSelection = this.svg.selectAll("rect").data(dataset, rentTime => rentTime.name)
 
-            selection.on('click', d => this.expandTime(selection, graphics, d))
+            selection
+                .on('click', d => this.expandTime(selection, graphics, d))
                 .transition().attr(graphics.normalRentAttrs());
 
             selection.enter().append("rect").attr(graphics.normalRentAttrs())
@@ -238,23 +235,37 @@ module CommutesAndRent {
 
 module CommutesAndRent {
 
+    export class Constants {
+
+        public static pixelsPerMinute: number = 15;
+        public static barSpacing: number = 2;
+
+        public static verticalMargin: number = 50;
+        public static horizontalMargin: number = 50;
+
+        public static xAxisOffset: number = 40;
+        public static yAxisOffset: number = 40;
+    }
+
     export class Graphics {
 
         private xScale: D3.Scale.LinearScale;
         private yScale: D3.Scale.LinearScale;
 
-        private static pixelsPerMinute = 10;
 
         private sizes: D3.Map = d3.map();
         private indices: D3.Map = d3.map();
 
         constructor(dataset: RentTime[]) {
-            this.xScale = this.makeXScale(dataset);
-            this.yScale = this.makeYScale(dataset);
+            this.xScale = ScaleBuilders.makeXScale(dataset);
+            this.yScale = ScaleBuilders.makeYScale(dataset);
+
+            AxisBuilders.makeXAxis(this.xScale);
+            AxisBuilders.makeYAxis(this.yScale);
 
             this.calculateOffsets(dataset);
         }
-
+        
         private calculateOffsets(dataset: RentTime[]): void {
             for (var i: number = 0; i < dataset.length; i++) {
 
@@ -267,32 +278,14 @@ module CommutesAndRent {
                     this.indices[dataset[i].name] = 0;
                     this.sizes[dataset[i].time] = 1;
                 }
-            } 
-        }
-
-        private makeXScale(dataset: RentTime[]): D3.Scale.LinearScale {
-            var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
-            var highestRent: number = d3.max(dataset, stat => stat.upperQuartile);
-
-            return d3.scale.linear()
-                .domain([lowestRent, highestRent])
-                .range([0, $("#chart").width()]);
-        }
-
-        private makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
-            var times: number[] = dataset.map(departure => departure.time);
-            var range: number = d3.max(times) - d3.min(times);
-
-            return d3.scale.linear()
-                .domain([d3.max(times), d3.min(times)])
-                .range([0, Graphics.pixelsPerMinute*range]);
+            }
         }
 
         public normalRentAttrs(): any {
             return {
                 x: (d: RentTime) => this.xScale(d.lowerQuartile),
                 y: (d: RentTime) => this.yScale(d.time),
-                height: 10,
+                height: () => Constants.pixelsPerMinute - Constants.barSpacing,
                 width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
                 opacity: 0.2
             };
@@ -314,6 +307,50 @@ module CommutesAndRent {
             else {
                 return d.time;
             }
+        }
+    }
+
+    class ScaleBuilders {
+
+        public static makeXScale(dataset: RentTime[]): D3.Scale.LinearScale {
+            var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
+            var highestRent: number = d3.max(dataset, stat => stat.upperQuartile);
+
+            return d3.scale.linear()
+                .domain([lowestRent, highestRent])
+                .range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);
+        }
+
+        public static makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
+            var times: number[] = dataset.map(departure => departure.time);
+            var range: number = d3.max(times) - d3.min(times);
+
+            return d3.scale.linear()
+                .domain([d3.max(times), d3.min(times)])
+                .range([Constants.verticalMargin, Constants.pixelsPerMinute * range - Constants.verticalMargin]);
+        }
+    }
+
+    class AxisBuilders {
+
+        public static makeXAxis(xScale: D3.Scale.LinearScale): void {
+            var axis: D3.Svg.Axis = d3.svg.axis()
+                .scale(xScale)
+                .orient("top");
+
+            d3.select(".x.axis")
+                .attr("transform", "translate(0," + Constants.xAxisOffset + ")")
+                .transition()
+                .call(axis);
+        }
+
+        public static makeYAxis(yScale: D3.Scale.LinearScale): void {
+            var axis: D3.Svg.Axis = d3.svg.axis().scale(yScale).orient("right");
+
+            d3.select(".y.axis")
+                .attr("transform", "translate(" + ($("#chart").width() - Constants.yAxisOffset) + ",0)")
+                .transition()
+                .call(axis);
         }
     }
 }

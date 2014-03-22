@@ -159,8 +159,6 @@ var CommutesAndRent;
 
             this.svg = d3.select("#chart");
 
-            this.chartWidth = $("#chart").width();
-
             this.updateChart();
         }
         ChartView.prototype.updateChart = function () {
@@ -222,12 +220,30 @@ var CommutesAndRent;
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
+    var Constants = (function () {
+        function Constants() {
+        }
+        Constants.pixelsPerMinute = 15;
+        Constants.barSpacing = 2;
+
+        Constants.verticalMargin = 50;
+        Constants.horizontalMargin = 50;
+
+        Constants.xAxisOffset = 40;
+        Constants.yAxisOffset = 40;
+        return Constants;
+    })();
+    CommutesAndRent.Constants = Constants;
+
     var Graphics = (function () {
         function Graphics(dataset) {
             this.sizes = d3.map();
             this.indices = d3.map();
-            this.xScale = this.makeXScale(dataset);
-            this.yScale = this.makeYScale(dataset);
+            this.xScale = ScaleBuilders.makeXScale(dataset);
+            this.yScale = ScaleBuilders.makeYScale(dataset);
+
+            AxisBuilders.makeXAxis(this.xScale);
+            AxisBuilders.makeYAxis(this.yScale);
 
             this.calculateOffsets(dataset);
         }
@@ -245,26 +261,6 @@ var CommutesAndRent;
             }
         };
 
-        Graphics.prototype.makeXScale = function (dataset) {
-            var lowestRent = d3.min(dataset, function (stat) {
-                return stat.lowerQuartile;
-            });
-            var highestRent = d3.max(dataset, function (stat) {
-                return stat.upperQuartile;
-            });
-
-            return d3.scale.linear().domain([lowestRent, highestRent]).range([0, $("#chart").width()]);
-        };
-
-        Graphics.prototype.makeYScale = function (dataset) {
-            var times = dataset.map(function (departure) {
-                return departure.time;
-            });
-            var range = d3.max(times) - d3.min(times);
-
-            return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([0, Graphics.pixelsPerMinute * range]);
-        };
-
         Graphics.prototype.normalRentAttrs = function () {
             var _this = this;
             return {
@@ -274,7 +270,9 @@ var CommutesAndRent;
                 y: function (d) {
                     return _this.yScale(d.time);
                 },
-                height: 10,
+                height: function () {
+                    return Constants.pixelsPerMinute - Constants.barSpacing;
+                },
                 width: function (d) {
                     return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
                 },
@@ -300,9 +298,50 @@ var CommutesAndRent;
                 return d.time;
             }
         };
-        Graphics.pixelsPerMinute = 10;
         return Graphics;
     })();
     CommutesAndRent.Graphics = Graphics;
+
+    var ScaleBuilders = (function () {
+        function ScaleBuilders() {
+        }
+        ScaleBuilders.makeXScale = function (dataset) {
+            var lowestRent = d3.min(dataset, function (stat) {
+                return stat.lowerQuartile;
+            });
+            var highestRent = d3.max(dataset, function (stat) {
+                return stat.upperQuartile;
+            });
+
+            return d3.scale.linear().domain([lowestRent, highestRent]).range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);
+        };
+
+        ScaleBuilders.makeYScale = function (dataset) {
+            var times = dataset.map(function (departure) {
+                return departure.time;
+            });
+            var range = d3.max(times) - d3.min(times);
+
+            return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([Constants.verticalMargin, Constants.pixelsPerMinute * range - Constants.verticalMargin]);
+        };
+        return ScaleBuilders;
+    })();
+
+    var AxisBuilders = (function () {
+        function AxisBuilders() {
+        }
+        AxisBuilders.makeXAxis = function (xScale) {
+            var axis = d3.svg.axis().scale(xScale).orient("top");
+
+            d3.select(".x.axis").attr("transform", "translate(0," + Constants.xAxisOffset + ")").transition().call(axis);
+        };
+
+        AxisBuilders.makeYAxis = function (yScale) {
+            var axis = d3.svg.axis().scale(yScale).orient("right");
+
+            d3.select(".y.axis").attr("transform", "translate(" + ($("#chart").width() - Constants.yAxisOffset) + ",0)").transition().call(axis);
+        };
+        return AxisBuilders;
+    })();
 })(CommutesAndRent || (CommutesAndRent = {}));
 //# sourceMappingURL=commutes-and-rent.js.map
