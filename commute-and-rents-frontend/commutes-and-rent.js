@@ -157,16 +157,94 @@ var CommutesAndRent;
                 return _this.updateChart();
             };
 
-            this.chartHeight = $("#chart").height();
+            this.svg = d3.select("#chart");
+
             this.chartWidth = $("#chart").width();
+
+            this.updateChart();
         }
         ChartView.prototype.updateChart = function () {
-            console.log(this.model.commutes.destination);
+            var graphics = new CommutesAndRent.Graphics(this.model.rents, this.model.commutes.times);
+
+            var data = this.svg.selectAll("rect").data(this.generateData(), function (rentTime) {
+                return rentTime.name;
+            });
+            data.attr(graphics.rentRectAttrs);
+
+            data.enter().append("rect").attr(graphics.rentRectAttrs);
         };
-        ChartView.barSpacing = 1;
-        ChartView.barHeight = 10;
+
+        ChartView.prototype.generateData = function () {
+            var departureLookup = this.model.commutes.times.reduce(function (m, d) {
+                m.set(d.station, d.time);
+                return m;
+            }, d3.map());
+            var rentTimes = this.model.rents.map(function (rent) {
+                return new RentTime(rent, departureLookup.get(rent.name));
+            });
+
+            return rentTimes;
+        };
         return ChartView;
     })();
     CommutesAndRent.ChartView = ChartView;
+
+    var RentTime = (function () {
+        function RentTime(rentStat, time) {
+            this.name = rentStat.name;
+            this.lowerQuartile = rentStat.lowerQuartile;
+            this.median = rentStat.median;
+            this.upperQuartile = rentStat.upperQuartile;
+
+            this.time = time;
+        }
+        return RentTime;
+    })();
+    CommutesAndRent.RentTime = RentTime;
+})(CommutesAndRent || (CommutesAndRent = {}));
+
+var CommutesAndRent;
+(function (CommutesAndRent) {
+    var Graphics = (function () {
+        function Graphics(rentStats, departures) {
+            var _this = this;
+            this.rentRectAttrs = {
+                x: function (d) {
+                    return _this.xScale(d.lowerQuartile);
+                },
+                y: function (d) {
+                    return _this.yScale(d.time);
+                },
+                height: 10,
+                width: function (d) {
+                    return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
+                }
+            };
+            this.xScale = this.makeXScale(rentStats);
+            this.yScale = this.makeYScale(departures);
+        }
+        Graphics.prototype.makeXScale = function (rentStats) {
+            var lowestRent = d3.min(rentStats, function (stat) {
+                return stat.lowerQuartile;
+            });
+            var highestRent = d3.max(rentStats, function (stat) {
+                return stat.upperQuartile;
+            });
+
+            return d3.scale.linear().domain([lowestRent, highestRent]).range([0, $("#chart").width()]);
+        };
+
+        Graphics.prototype.makeYScale = function (departures) {
+            var times = departures.map(function (departure) {
+                return departure.time;
+            });
+            var range = d3.max(times) - d3.min(times);
+
+            return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([0, Graphics.pixelsPerMinute * range]);
+        };
+        Graphics.pixelsPerMinute = 10;
+        return Graphics;
+    })();
+    CommutesAndRent.Graphics = Graphics;
 })(CommutesAndRent || (CommutesAndRent = {}));
 //# sourceMappingURL=commutes-and-rent.js.map

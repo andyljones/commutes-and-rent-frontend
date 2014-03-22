@@ -167,27 +167,96 @@ module CommutesAndRent {
 module CommutesAndRent {
 
     export class ChartView {
-
         private model: ChartModelView;
 
-        private rects: D3.Selection;
+        private svg: D3.Selection;
 
-        private chartHeight: number;
         private chartWidth: number;
-
-        private static barSpacing: number = 1;
-        private static barHeight: number = 10;
 
         constructor(model: ChartModelView) {
             this.model = model;
             model.updateSubscriber = () => this.updateChart();
 
-            this.chartHeight = $("#chart").height();
+            this.svg = d3.select("#chart");
+
             this.chartWidth = $("#chart").width();
+
+            this.updateChart();
         }
 
         private updateChart(): void {
-            console.log(this.model.commutes.destination);
+            var graphics = new Graphics(this.model.rents, this.model.commutes.times);
+
+            var data: D3.UpdateSelection = this.svg.selectAll("rect").data(this.generateData(), rentTime => rentTime.name);
+            data.attr(graphics.rentRectAttrs);
+
+            data.enter().append("rect").attr(graphics.rentRectAttrs);
+        }
+
+        private generateData() {
+            var departureLookup: D3.Map = this.model.commutes.times.reduce((m: D3.Map, d: DepartureTime) => { m.set(d.station, d.time); return m; }, d3.map());
+            var rentTimes: RentTime[] = this.model.rents.map(rent => new RentTime(rent, departureLookup.get(rent.name)));
+
+            return rentTimes;
+        }
+    }
+
+    export class RentTime implements RentStatistic {
+        name: string;
+        lowerQuartile: number;
+        median: number;
+        upperQuartile: number;
+
+        time: number;
+
+        constructor(rentStat: RentStatistic, time: number) {
+            this.name = rentStat.name;
+            this.lowerQuartile = rentStat.lowerQuartile;
+            this.median = rentStat.median;
+            this.upperQuartile = rentStat.upperQuartile;
+
+            this.time = time;
+        }
+    }
+}
+
+module CommutesAndRent {
+
+    export class Graphics {
+
+        public rentRectAttrs: any = {
+            x: (d: RentTime) => this.xScale(d.lowerQuartile),
+            y: (d: RentTime) => this.yScale(d.time),
+            height: 10,
+            width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile)
+        };
+
+        private xScale: D3.Scale.LinearScale;
+        private yScale: D3.Scale.LinearScale;
+
+        private static pixelsPerMinute = 10;
+
+        constructor(rentStats: RentStatistic[], departures: DepartureTime[]) {
+            this.xScale = this.makeXScale(rentStats);
+            this.yScale = this.makeYScale(departures);
+        }
+
+        private makeXScale(rentStats: RentStatistic[]): D3.Scale.LinearScale {
+            var lowestRent: number = d3.min(rentStats, stat => stat.lowerQuartile);
+            var highestRent: number = d3.max(rentStats, stat => stat.upperQuartile);
+
+            return d3.scale.linear()
+                .domain([lowestRent, highestRent])
+                .range([0, $("#chart").width()]);
+        }
+
+        private makeYScale(departures: DepartureTime[]): D3.Scale.LinearScale {
+            var times: number[] = departures.map(departure => departure.time);
+            var range: number = d3.max(times) - d3.min(times);
+
+            return d3.scale.linear()
+                .domain([d3.max(times), d3.min(times)])
+                .range([0, Graphics.pixelsPerMinute * range]);
         }
     }
 }
