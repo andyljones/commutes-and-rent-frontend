@@ -24,6 +24,7 @@ window.onload = function () {
 var CommutesAndRent;
 (function (CommutesAndRent) {
     var Sliders = (function () {
+        //TODO: Defaults are currently in the controller.
         function Sliders() {
             this.updateTimeSubscriber = function () {
             };
@@ -226,9 +227,13 @@ var CommutesAndRent;
 
             d3.selectAll(".rent.g").data(dataset, function (rentTime) {
                 return rentTime.name;
-            }).on('click', function (d) {
-                return _this.expandTime(graphics, d);
             }).transition().attr(graphics.normalPositionAttrs());
+
+            d3.selectAll(".rent.rect").on('click', function (d) {
+                return _this.expandTime(graphics, d);
+            });
+
+            this.currentlyExpanded = null;
         };
 
         ChartView.prototype.expandTime = function (graphics, d) {

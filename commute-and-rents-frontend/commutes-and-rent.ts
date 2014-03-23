@@ -244,9 +244,12 @@ module CommutesAndRent {
             var graphics = new Graphics(dataset);
 
             d3.selectAll(".rent.g").data(dataset, rentTime => rentTime.name)
-                .on('click', d => this.expandTime(graphics, d))
                 .transition().attr(graphics.normalPositionAttrs());
 
+            d3.selectAll(".rent.rect")
+                .on('click', d => this.expandTime(graphics, d));
+
+            this.currentlyExpanded = null;
         }
 
         private expandTime(graphics: Graphics, d: RentTime): void {
