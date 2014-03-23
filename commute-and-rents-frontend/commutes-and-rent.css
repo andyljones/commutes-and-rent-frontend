@@ -1,11 +1,36 @@
 ﻿@import "library/leaflet/leaflet.css";
+@import "library/d3.slider/d3.slider.css";
 
 html, body, #app {
     height: 100%;
     margin: 0;
 }
 
+#map-and-controls {
+    float:left;
+    height: 100%;
+    width: 50%;
+}
+
+#controls {
+    width: 100%;
+    height: 100px;
+}
+
+.slider {
+    width: 90%;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 #map {
+    float: left;
+    height: 90%;
+    width: 100%;
+}
+
+#chart-holder {
     height: 100%;
     float: left;
     width: 50%;
@@ -13,6 +38,4 @@ html, body, #app {
 
 #chart {
     height: 100%;
-    float: left;
-    width: 50%;
 }

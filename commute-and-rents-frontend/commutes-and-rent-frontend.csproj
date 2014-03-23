@@ -19,6 +19,8 @@
   <ItemGroup>
     <Content Include="commutes-and-rent.css" />
     <Content Include="index.html" />
+    <Content Include="library\d3.slider\d3.slider.css" />
+    <Content Include="library\d3.slider\d3.slider.js" />
     <Content Include="library\d3\d3.min.js" />
     <Content Include="library\jquery\jquery-2.1.0.min.js" />
     <Content Include="library\leaflet\images\layers-2x.png" />
@@ -580,8 +582,8 @@
     <Content Include="preprocessor-output\processed-departure-times\960\Woodford.json" />
     <Content Include="preprocessor-output\processed-departure-times\960\Woodside Park.json" />
     <Content Include="preprocessor-output\processed-locations\locations.json" />
-    <Content Include="preprocessor-output\processed-rents\three-bedroom-rents.json" />
-    <Content Include="preprocessor-output\processed-rents\two-bedroom-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\3-bedroom-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\2-bedroom-rents.json" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>

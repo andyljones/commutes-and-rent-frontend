@@ -2,9 +2,59 @@
     var map: CommutesAndRent.Map = new CommutesAndRent.Map();
     var controller: CommutesAndRent.ChartController = new CommutesAndRent.ChartController();
 
-    map.markerSubscriber = (name: string) => controller.updateDestination(name);
-}
+    var sliders: CommutesAndRent.Sliders = new CommutesAndRent.Sliders();
+    sliders.updateTimeSubscriber = time => controller.updateArrivalTime(time);
+    sliders.updateBedroomSubscriber = count => controller.updateBedroomCount(count);
 
+    map.markerSubscriber = (name: string) => controller.updateDestination(name);
+};
+
+declare function d3slider(): any;
+
+module CommutesAndRent {
+        
+    export class Sliders {
+        public updateTimeSubscriber: (number) => void = () => { };
+        public updateBedroomSubscriber: (number) => void = () => { };
+
+        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+
+        //TODO: Defaults are currently in the controller.
+        constructor() {
+            this.makeTimeSlider();
+            this.makeBedroomCountSlider();
+        }
+
+        private makeTimeSlider() {
+            var slider: any = d3slider()
+                .axis(true)
+                .min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime)
+                .on("slide", (event, value) => this.updateTimeSubscriber(value));
+
+            d3.select("#timeslider").call(slider);
+        }
+
+        private makeBedroomCountSlider() {
+            var slider: any = d3slider()
+                .axis(true)
+                .min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom)
+                .on("slide", (event, value) => this.updateBedroomSubscriber(value));
+
+            d3.select("#bedroomslider").call(slider);
+        }
+
+    }
+
+    class SliderConstants {
+        public static minTime: number = 480;
+        public static maxTime: number = 960;
+        public static stepTime: number = 480;  
+
+        public static minBedroom: number = 2;
+        public static maxBedroom: number = 3;
+        public static stepBedroom: number = 1;
+    }
+}
 
 module CommutesAndRent {
     
@@ -78,21 +128,10 @@ module CommutesAndRent
         public updateSubscriber: () => void = () => { };
 
         public rents: RentStatistic[];
-        public arrivalTimes: number[];
         public commutes: CommuteTimes;
         
         private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
         private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
-
-        public initialize(): Q.Promise<void[]> {
-            return Q.all([this.loadTimesData()]);
-        }
-        
-        private loadTimesData(): Q.Promise<void> {
-            var filepath: string = ChartModel.departureTimesFolder + "times.json";
-
-            return Q($.getJSON(filepath)).then(data => { this.arrivalTimes = data; this.updateSubscriber(); return null; });
-        }
 
         public loadCommuteData(time: number, stationName: string): Q.Promise<void> {
             var filepath: string = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
@@ -100,8 +139,8 @@ module CommutesAndRent
             return Q($.getJSON(filepath)).then(data => { this.commutes = data; this.updateSubscriber(); return null; });
         }
 
-        public loadRentData(filename: string): Q.Promise<void> {
-            var filepath: string = ChartModel.rentStatsFolder + filename;
+        public loadRentData(numberOfBedrooms: number): Q.Promise<void> {
+            var filepath: string = ChartModel.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
 
             return Q($.getJSON(filepath)).then(data => { this.rents = data; this.updateSubscriber(); return null; });
         }
@@ -127,7 +166,6 @@ module CommutesAndRent
 
     export interface ChartModelView {
         rents: RentStatistic[];
-        arrivalTimes: number[];
         commutes: CommuteTimes;
         updateSubscriber: () => void;
     }
@@ -142,20 +180,27 @@ module CommutesAndRent {
 
         private static defaultArrivalTime: number = 480;
         private static defaultDestination: string = "Barbican";
-        private static defaultRentFile: string = "two-bedroom-rents.json";
+        private static defaultNumberOfBedrooms: number  = 2;
 
         constructor() { 
             this.model = new ChartModel();
-            this.model.initialize()
-                .then(() => Q.all([
-                    this.model.loadRentData(ChartController.defaultRentFile),
+            Q.all([
+                    this.model.loadRentData(ChartController.defaultNumberOfBedrooms),
                     this.model.loadCommuteData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
-                ]))
-                .then(() => this.initialize());
+                ])
+            .then(() => this.initialize());
         }
 
         private initialize(): void {
             this.view = new ChartView(this.model);
+        }
+
+        public updateBedroomCount(bedroomCount: number) {
+            this.model.loadRentData(bedroomCount);
+        }
+
+        public updateArrivalTime(arrivalTime: number) {
+            this.model.loadCommuteData(arrivalTime, this.model.commutes.destination);
         }
 
         public updateDestination(stationName: string) {
@@ -186,8 +231,11 @@ module CommutesAndRent {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new Graphics(dataset);
 
-            this.svg.selectAll("rect").data(dataset)
-                .enter().append("rect").attr(graphics.normalRentAttrs())
+            this.svg.selectAll(".rent.g").data(dataset).enter()
+                .append("g").attr(graphics.normalPositionAttrs());
+
+            d3.selectAll(".rent.g")
+                .append("rect").attr(graphics.rentRectAttrs())
                 .on('click', d => this.expandTime(graphics, d));
         }
 
@@ -195,19 +243,20 @@ module CommutesAndRent {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new Graphics(dataset);
 
-            this.svg.selectAll("rect").data(dataset, rentTime => rentTime.name)
+            d3.selectAll(".rent.g").data(dataset, rentTime => rentTime.name)
                 .on('click', d => this.expandTime(graphics, d))
-                .transition().attr(graphics.normalRentAttrs());
+                .transition().attr(graphics.normalPositionAttrs());
+
         }
 
         private expandTime(graphics: Graphics, d: RentTime): void {
-            var data = this.svg.selectAll("rect");
+            var data = this.svg.selectAll(".rent.g");
 
             if (d.time === this.currentlyExpanded) {
-                data.transition().attr(graphics.normalRentAttrs());
+                data.transition().attr(graphics.normalPositionAttrs());
                 this.currentlyExpanded = null;
             } else {
-                data.transition().attr(graphics.expandedRentAttrs(d.time));
+                data.transition().attr(graphics.expandedPositionAttrs(d.time));
                 this.currentlyExpanded = d.time;
             }
         }
@@ -286,19 +335,25 @@ module CommutesAndRent {
             }
         }
 
-        public normalRentAttrs(): any {
+        public rentRectAttrs(): any {
             return {
-                x: (d: RentTime) => this.xScale(d.lowerQuartile),
-                y: (d: RentTime) => this.yScale(d.time),
+                "class": "rent rect",
                 height: () => Constants.pixelsPerMinute - Constants.barSpacing,
                 width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
                 opacity: 0.2
             };
         }
 
-        public expandedRentAttrs(expandedTime: number): any {
+        public normalPositionAttrs(): any {
             return {
-                y: (d: RentTime) => this.yScale(this.offset(d, expandedTime))
+                transform: (d: RentTime) => "translate(" + this.xScale(d.lowerQuartile) +","+ this.yScale(d.time) + ")",
+                "class": "rent g",
+            };
+        }
+
+        public expandedPositionAttrs(expandedTime: number): any {
+            return {
+                transform: (d: RentTime) => "translate(" + this.xScale(d.lowerQuartile) + "," + this.yScale(this.offset(d, expandedTime)) + ")"
             };
         }
 
