@@ -415,16 +415,20 @@ module CommutesAndRent {
         }
 
         private calculateOffsets(dataset: RentTime[]): void {
+            var sorted = dataset.sort((a, b) => a.median - b.median);
+
             for (var i: number = 0; i < dataset.length; i++) {
 
-                var count = this.sizes[dataset[i].time];
+                var item = sorted[i];
+
+                var count = this.sizes[item.time];
 
                 if (typeof count === "number") {
-                    this.indices[dataset[i].name] = count;
-                    this.sizes[dataset[i].time] = count + 1;
+                    this.indices[item.name] = count;
+                    this.sizes[item.time] = count + 1;
                 } else {
-                    this.indices[dataset[i].name] = 0;
-                    this.sizes[dataset[i].time] = 1;
+                    this.indices[item.name] = 0;
+                    this.sizes[item.time] = 1;
                 }
             }
         }
