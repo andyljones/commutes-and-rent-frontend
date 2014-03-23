@@ -265,11 +265,13 @@ var CommutesAndRent;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
-
-            selection.append("rect").attr(this.graphics.barAttrs()).on('click', function (d) {
+            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").on('click', function (d) {
                 return _this.expandTime(d.time);
-            });
+            }).attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+
+            selection.append("rect").attr(this.graphics.backgroundAttrs(null));
+
+            selection.append("rect").attr(this.graphics.barAttrs());
 
             selection.append("text").attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
         };
@@ -283,11 +285,13 @@ var CommutesAndRent;
                 return rentTime.name;
             });
 
-            selection.transition().attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
-
-            selection.select(".rent.rect").on('click', function (d) {
+            selection.on('click', function (d) {
                 return _this.expandTime(d.time);
-            }).transition().attr(this.graphics.barAttrs());
+            }).transition().attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+
+            selection.select(".rent.rect").transition().attr(this.graphics.barAttrs());
+
+            selection.select(".rent.background").transition().attr(this.graphics.backgroundAttrs(null));
 
             selection.select(".rent.text").transition().attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
 
@@ -299,10 +303,12 @@ var CommutesAndRent;
 
             if (time === this.currentlyExpanded) {
                 selection.transition().attr(this.graphics.normalPositionAttrs());
+                selection.select(".rent.background").attr(this.graphics.backgroundAttrs(null));
                 selection.select(".rent.text").text(this.graphics.normalLabelText());
                 this.currentlyExpanded = null;
             } else {
                 selection.transition().attr(this.graphics.expandedPositionAttrs(time));
+                selection.select(".rent.background").attr(this.graphics.backgroundAttrs(time));
                 selection.select(".rent.text").text(this.graphics.expandedLabelText(time));
                 this.currentlyExpanded = time;
             }
@@ -451,6 +457,20 @@ var CommutesAndRent;
             return {
                 transform: function (d) {
                     return "translate(0," + _this.yScale(_this.offset(d, expandedTime)) + ")";
+                }
+            };
+        };
+
+        Graphics.prototype.backgroundAttrs = function (expandedTime) {
+            return {
+                "class": "rent background",
+                x: ChartConstants.margins.left,
+                width: this.chartWidth - ChartConstants.margins.left,
+                height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
+                "fill": "black",
+                "stroke-width": 0,
+                opacity: function (d) {
+                    return d.time === expandedTime ? 0.2 : 0;
                 }
             };
         };

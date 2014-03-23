@@ -278,13 +278,17 @@ module CommutesAndRent {
 
             var selection = this.svg.selectAll(".rent.g").data(dataset).enter()
                 .append("g")
+                .on('click', d => this.expandTime(d.time))
                 .attr(this.graphics.normalPositionAttrs())
                 .attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
             selection
                 .append("rect")
-                .attr(this.graphics.barAttrs())
-                .on('click', d => this.expandTime(d.time));
+                .attr(this.graphics.backgroundAttrs(null));
+
+            selection
+                .append("rect")
+                .attr(this.graphics.barAttrs());
 
             selection
                 .append("text")
@@ -299,14 +303,18 @@ module CommutesAndRent {
             var selection = d3.selectAll(".rent.g").data(dataset, rentTime => rentTime.name);
 
             selection
+                .on('click', d => this.expandTime(d.time))
                 .transition()
                 .attr(this.graphics.normalPositionAttrs())
                 .attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
             selection.select(".rent.rect")
-                .on('click', d => this.expandTime(d.time))
                 .transition()
                 .attr(this.graphics.barAttrs());
+
+            selection.select(".rent.background")
+                .transition()
+                .attr(this.graphics.backgroundAttrs(null));
 
             selection.select(".rent.text")
                 .transition()
@@ -321,10 +329,12 @@ module CommutesAndRent {
 
             if (time === this.currentlyExpanded) {
                 selection.transition().attr(this.graphics.normalPositionAttrs());
+                selection.select(".rent.background").attr(this.graphics.backgroundAttrs(null));
                 selection.select(".rent.text").text(this.graphics.normalLabelText());
                 this.currentlyExpanded = null;
             } else {
                 selection.transition().attr(this.graphics.expandedPositionAttrs(time));
+                selection.select(".rent.background").attr(this.graphics.backgroundAttrs(time));
                 selection.select(".rent.text").text(this.graphics.expandedLabelText(time));
                 this.currentlyExpanded = time;
             }
@@ -456,6 +466,18 @@ module CommutesAndRent {
         public expandedPositionAttrs(expandedTime: number): any {
             return {
                 transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")"
+            };
+        }
+
+        public backgroundAttrs(expandedTime: number): any {
+            return {
+                "class": "rent background",
+                x: ChartConstants.margins.left,
+                width: this.chartWidth - ChartConstants.margins.left,
+                height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
+                "fill": "black",
+                "stroke-width": 0,
+                opacity: (d: RentTime) => d.time === expandedTime? 0.2 : 0
             };
         }
 
