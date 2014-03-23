@@ -285,9 +285,9 @@ var CommutesAndRent;
 
             selection.transition().attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
-            selection.select(".rent.rect").attr(this.graphics.barAttrs()).on('click', function (d) {
+            selection.select(".rent.rect").on('click', function (d) {
                 return _this.expandTime(d.time);
-            });
+            }).transition().attr(this.graphics.barAttrs());
 
             selection.select(".rent.text").transition().attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
 

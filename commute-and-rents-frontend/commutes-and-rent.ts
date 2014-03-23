@@ -304,8 +304,9 @@ module CommutesAndRent {
                 .attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
             selection.select(".rent.rect")
-                .attr(this.graphics.barAttrs())
-                .on('click', d => this.expandTime(d.time));
+                .on('click', d => this.expandTime(d.time))
+                .transition()
+                .attr(this.graphics.barAttrs());
 
             selection.select(".rent.text")
                 .transition()
