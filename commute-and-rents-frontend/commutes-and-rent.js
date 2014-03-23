@@ -16,8 +16,11 @@ window.onload = function () {
         return controller.updateBedroomCount(count);
     };
 
-    map.markerSubscriber = function (name) {
+    map.clickListener = function (name) {
         return controller.updateDestination(name);
+    };
+    map.mouseoverListener = function (name) {
+        return controller.highlight(name);
     };
 };
 
@@ -77,7 +80,11 @@ var CommutesAndRent;
     var Map = (function () {
         function Map() {
             var _this = this;
-            this.markerSubscriber = function () {
+            this.clickListener = function () {
+            };
+            this.mouseoverListener = function () {
+            };
+            this.mouseoutListener = function () {
             };
             this.mapObject = Map.buildMap();
 
@@ -98,8 +105,12 @@ var CommutesAndRent;
             for (var i = 0; i < locations.length; i++) {
                 var latLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                new StationMarker(locations[i].name, latLng).addTo(this.mapObject).on('click', function (e) {
-                    return _this.markerSubscriber(e.target.name);
+                new StationMarker(locations[i].name, latLng).addTo(this.mapObject).on("click", function (e) {
+                    return _this.clickListener(e.target.name);
+                }).on("mouseover", function (e) {
+                    return _this.mouseoverListener(e.target.name);
+                }).on("mouseout", function (e) {
+                    return _this.mouseoutListener(e.target.name);
                 });
             }
         };
@@ -189,6 +200,10 @@ var CommutesAndRent;
         ChartController.prototype.updateDestination = function (stationName) {
             this.model.loadCommuteData(this.model.commutes.arrivalTime, stationName);
         };
+
+        ChartController.prototype.highlight = function (name) {
+            this.view.highlightStation(name);
+        };
         ChartController.defaultArrivalTime = 480;
         ChartController.defaultDestination = "Barbican";
         ChartController.defaultNumberOfBedrooms = 1;
@@ -214,48 +229,48 @@ var CommutesAndRent;
         ChartView.prototype.initialize = function () {
             var _this = this;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
-            var graphics = new CommutesAndRent.Graphics(dataset);
+            this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(graphics.normalPositionAttrs());
+            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(this.graphics.normalPositionAttrs());
 
-            selection.append("rect").attr(graphics.rentRectAttrs()).on('click', function (d) {
-                return _this.expandTime(graphics, d);
+            selection.append("rect").attr(this.graphics.barAttrs(this.currentlyHighlighted)).on('click', function (d) {
+                return _this.expandTime(d.time);
             });
 
-            selection.append("text").attr(graphics.normalLabelAttrs()).text(graphics.normalLabelText());
+            selection.append("text").attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
         };
 
         ChartView.prototype.update = function () {
             var _this = this;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
-            var graphics = new CommutesAndRent.Graphics(dataset);
+            this.graphics = new CommutesAndRent.Graphics(dataset);
 
             var selection = d3.selectAll(".rent.g").data(dataset, function (rentTime) {
                 return rentTime.name;
             });
 
-            selection.transition().attr(graphics.normalPositionAttrs());
+            selection.transition().attr(this.graphics.normalPositionAttrs());
 
             selection.select(".rent.rect").on('click', function (d) {
-                return _this.expandTime(graphics, d);
-            }).transition().attr(graphics.rentRectAttrs());
+                return _this.expandTime(d.time);
+            }).transition().attr(this.graphics.barAttrs(this.currentlyHighlighted));
 
-            selection.select(".rent.text").transition().attr(graphics.normalLabelAttrs()).text(graphics.normalLabelText());
+            selection.select(".rent.text").transition().attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
 
             this.currentlyExpanded = null;
         };
 
-        ChartView.prototype.expandTime = function (graphics, d) {
-            var data = this.svg.selectAll(".rent.g");
+        ChartView.prototype.expandTime = function (time) {
+            var selection = this.svg.selectAll(".rent.g");
 
-            if (d.time === this.currentlyExpanded) {
-                data.transition().attr(graphics.normalPositionAttrs());
-                data.select(".rent.text").text(graphics.normalLabelText());
+            if (time === this.currentlyExpanded) {
+                selection.transition().attr(this.graphics.normalPositionAttrs());
+                selection.select(".rent.text").text(this.graphics.normalLabelText());
                 this.currentlyExpanded = null;
             } else {
-                data.transition().attr(graphics.expandedPositionAttrs(d.time));
-                data.select(".rent.text").text(graphics.expandedLabelText(d.time));
-                this.currentlyExpanded = d.time;
+                selection.transition().attr(this.graphics.expandedPositionAttrs(time));
+                selection.select(".rent.text").text(this.graphics.expandedLabelText(time));
+                this.currentlyExpanded = time;
             }
         };
 
@@ -269,6 +284,12 @@ var CommutesAndRent;
             });
 
             return rentTimes;
+        };
+
+        ChartView.prototype.highlightStation = function (name) {
+            this.currentlyHighlighted = name;
+
+            d3.selectAll(".rent.rect").attr(this.graphics.barAttrs(this.currentlyHighlighted));
         };
         return ChartView;
     })();
@@ -343,7 +364,7 @@ var CommutesAndRent;
             }
         };
 
-        Graphics.prototype.rentRectAttrs = function () {
+        Graphics.prototype.barAttrs = function (highlighted) {
             var _this = this;
             return {
                 "class": "rent rect",
@@ -356,7 +377,12 @@ var CommutesAndRent;
                 width: function (d) {
                     return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
                 },
-                opacity: 0.2
+                fill: function (d) {
+                    return d.name === highlighted ? "orange" : "black";
+                },
+                opacity: function (d) {
+                    return d.name === highlighted ? 1 : 0.2;
+                }
             };
         };
 
@@ -375,8 +401,7 @@ var CommutesAndRent;
             return {
                 transform: function (d) {
                     return "translate(0," + _this.yScale(_this.offset(d, expandedTime)) + ")";
-                },
-                "class": "rent g"
+                }
             };
         };
 

@@ -6,7 +6,8 @@
     sliders.updateTimeSubscriber = time => controller.updateArrivalTime(time);
     sliders.updateBedroomSubscriber = count => controller.updateBedroomCount(count);
 
-    map.markerSubscriber = (name: string) => controller.updateDestination(name);
+    map.clickListener = (name: string) => controller.updateDestination(name);
+    map.mouseoverListener = (name: string) => controller.highlight(name);
 };
 
 declare function d3slider(): any;
@@ -61,7 +62,9 @@ module CommutesAndRent {
     
     export class Map {
 
-        public markerSubscriber: (name: string) => void = () => { };
+        public clickListener: (name: string) => void = () => { };
+        public mouseoverListener: (name: string) => void = () => { };
+        public mouseoutListener: (name: string) => void = () => { };
 
         private mapObject: L.Map;
 
@@ -97,7 +100,9 @@ module CommutesAndRent {
 
                 new StationMarker(locations[i].name, latLng)
                     .addTo(this.mapObject)
-                    .on('click', (e: L.LeafletMouseEvent) => this.markerSubscriber(e.target.name));
+                    .on("click", (e: L.LeafletMouseEvent) => this.clickListener(e.target.name))
+                    .on("mouseover", (e: L.LeafletMouseEvent) => this.mouseoverListener(e.target.name))
+                    .on("mouseout", (e: L.LeafletMouseEvent) => this.mouseoutListener(e.target.name));
             }
         }
 
@@ -207,6 +212,10 @@ module CommutesAndRent {
         public updateDestination(stationName: string) {
             this.model.loadCommuteData(this.model.commutes.arrivalTime, stationName);
         }
+
+        public highlight(name: string) {
+            this.view.highlightStation(name);
+        }
     }
 }
 
@@ -217,7 +226,10 @@ module CommutesAndRent {
 
         private svg: D3.Selection;
 
+        private graphics: Graphics;
+
         private currentlyExpanded: number;
+        private currentlyHighlighted: string;
 
         constructor(model: ChartModelView) {
             this.model = model;
@@ -230,57 +242,57 @@ module CommutesAndRent {
 
         private initialize(): void {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
-            var graphics = new Graphics(dataset);
+            this.graphics = new Graphics(dataset);
 
             var selection = this.svg.selectAll(".rent.g").data(dataset).enter()
                 .append("g")
-                .attr(graphics.normalPositionAttrs());
+                .attr(this.graphics.normalPositionAttrs());
 
             selection
                 .append("rect")
-                .attr(graphics.rentRectAttrs())
-                .on('click', d => this.expandTime(graphics, d));
+                .attr(this.graphics.barAttrs(this.currentlyHighlighted))
+                .on('click', d => this.expandTime(d.time));
 
             selection
                 .append("text")
-                .attr(graphics.normalLabelAttrs())
-                .text(graphics.normalLabelText());
+                .attr(this.graphics.normalLabelAttrs())
+                .text(this.graphics.normalLabelText());
         }
 
         private update(): void {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
-            var graphics = new Graphics(dataset);
+            this.graphics = new Graphics(dataset);
 
             var selection = d3.selectAll(".rent.g").data(dataset, rentTime => rentTime.name);
 
             selection
                 .transition()
-                .attr(graphics.normalPositionAttrs());
+                .attr(this.graphics.normalPositionAttrs());
 
             selection.select(".rent.rect")
-                .on('click', d => this.expandTime(graphics, d))
+                .on('click', d => this.expandTime(d.time))
                 .transition()
-                .attr(graphics.rentRectAttrs());
+                .attr(this.graphics.barAttrs(this.currentlyHighlighted));
 
             selection.select(".rent.text")
                 .transition()
-                .attr(graphics.normalLabelAttrs())
-                .text(graphics.normalLabelText());
+                .attr(this.graphics.normalLabelAttrs())
+                .text(this.graphics.normalLabelText());
 
             this.currentlyExpanded = null;
         }
 
-        private expandTime(graphics: Graphics, d: RentTime): void {
-            var data = this.svg.selectAll(".rent.g");
+        private expandTime(time: number): void {
+            var selection = this.svg.selectAll(".rent.g");
 
-            if (d.time === this.currentlyExpanded) {
-                data.transition().attr(graphics.normalPositionAttrs());
-                data.select(".rent.text").text(graphics.normalLabelText());
+            if (time === this.currentlyExpanded) {
+                selection.transition().attr(this.graphics.normalPositionAttrs());
+                selection.select(".rent.text").text(this.graphics.normalLabelText());
                 this.currentlyExpanded = null;
             } else {
-                data.transition().attr(graphics.expandedPositionAttrs(d.time));
-                data.select(".rent.text").text(graphics.expandedLabelText(d.time));
-                this.currentlyExpanded = d.time;
+                selection.transition().attr(this.graphics.expandedPositionAttrs(time));
+                selection.select(".rent.text").text(this.graphics.expandedLabelText(time));
+                this.currentlyExpanded = time;
             }
         }
 
@@ -289,6 +301,13 @@ module CommutesAndRent {
             var rentTimes: RentTime[] = rents.map(rent => new RentTime(rent, departureLookup.get(rent.name)));
 
             return rentTimes;
+        }
+
+        public highlightStation(name: string) {
+            this.currentlyHighlighted = name;
+
+            d3.selectAll(".rent.rect")
+                .attr(this.graphics.barAttrs(this.currentlyHighlighted));
         }
     }
 
@@ -370,13 +389,14 @@ module CommutesAndRent {
             }
         }
 
-        public rentRectAttrs(): any {
+        public barAttrs(highlighted: string): any {
             return {
                 "class": "rent rect",
                 x: (d: RentTime) => this.xScale(d.lowerQuartile),
                 height: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
                 width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
-                opacity: 0.2
+                fill: d => d.name === highlighted? "orange" : "black",
+                opacity: d => d.name === highlighted? 1 : 0.2
             };
         }
 
@@ -389,8 +409,7 @@ module CommutesAndRent {
 
         public expandedPositionAttrs(expandedTime: number): any {
             return {
-                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")",
-                "class": "rent g"
+                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")"
             };
         }
 
