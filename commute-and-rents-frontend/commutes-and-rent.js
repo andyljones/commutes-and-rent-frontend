@@ -36,7 +36,7 @@ var CommutesAndRent;
         Sliders.prototype.makeTimeSlider = function () {
             var _this = this;
             var slider = d3slider().axis(true).min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime).on("slide", function (event, value) {
-                return _this.updateTimeSubscriber(value);
+                return _this.updateTimeSubscriber(SliderConstants.hoursToMinutes(value));
             });
 
             d3.select("#timeslider").call(slider);
@@ -58,9 +58,12 @@ var CommutesAndRent;
     var SliderConstants = (function () {
         function SliderConstants() {
         }
-        SliderConstants.minTime = 480;
-        SliderConstants.maxTime = 960;
-        SliderConstants.stepTime = 480;
+        SliderConstants.minTime = 7;
+        SliderConstants.maxTime = 24;
+        SliderConstants.stepTime = 1;
+        SliderConstants.hoursToMinutes = function (n) {
+            return 60 * (n - 1);
+        };
 
         SliderConstants.minBedroom = 1;
         SliderConstants.maxBedroom = 4;
@@ -144,7 +147,7 @@ var CommutesAndRent;
         ChartModel.prototype.loadRentData = function (numberOfBedrooms) {
             var _this = this;
             var filepath = ChartModel.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-            console.log(filepath);
+
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.rents = data;
                 _this.updateSubscriber();
@@ -378,9 +381,7 @@ var CommutesAndRent;
             var highestRent = d3.max(dataset, function (stat) {
                 return stat.upperQuartile;
             });
-            console.log(dataset.filter(function (d) {
-                return d.upperQuartile === highestRent;
-            }));
+
             return d3.scale.linear().domain([lowestRent, highestRent]).range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);
         };
 
@@ -389,7 +390,7 @@ var CommutesAndRent;
                 return departure.time;
             });
             var range = d3.max(times) - d3.min(times);
-
+            console.log(d3.min(times));
             return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([Constants.verticalMargin, Constants.pixelsPerMinute * range - Constants.verticalMargin]);
         };
         return ScaleBuilders;

@@ -29,7 +29,7 @@ module CommutesAndRent {
             var slider: any = d3slider()
                 .axis(true)
                 .min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime)
-                .on("slide", (event, value) => this.updateTimeSubscriber(value));
+                .on("slide", (event, value) => this.updateTimeSubscriber(SliderConstants.hoursToMinutes(value)));
 
             d3.select("#timeslider").call(slider);
         }
@@ -46,9 +46,10 @@ module CommutesAndRent {
     }
 
     class SliderConstants {
-        public static minTime: number = 480;
-        public static maxTime: number = 960;
-        public static stepTime: number = 480;  
+        public static minTime: number = 7;
+        public static maxTime: number = 24;
+        public static stepTime: number = 1;
+        public static hoursToMinutes: (number) => number = n => 60 * (n - 1);
 
         public static minBedroom: number = 1;
         public static maxBedroom: number = 4;
@@ -141,7 +142,7 @@ module CommutesAndRent
 
         public loadRentData(numberOfBedrooms: number): Q.Promise<void> {
             var filepath: string = ChartModel.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-            console.log(filepath);
+
             return Q($.getJSON(filepath)).then(data => { this.rents = data; this.updateSubscriber(); return null; });
         }
     }
@@ -383,7 +384,8 @@ module CommutesAndRent {
         public static makeXScale(dataset: RentTime[]): D3.Scale.LinearScale {
             var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
             var highestRent: number = d3.max(dataset, stat => stat.upperQuartile);
-            console.log(dataset.filter(d => d.upperQuartile === highestRent));
+
+
             return d3.scale.linear()
                 .domain([lowestRent, highestRent])
                 .range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);
@@ -392,7 +394,7 @@ module CommutesAndRent {
         public static makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
             var times: number[] = dataset.map(departure => departure.time);
             var range: number = d3.max(times) - d3.min(times);
-
+            console.log(d3.min(times));
             return d3.scale.linear()
                 .domain([d3.max(times), d3.min(times)])
                 .range([Constants.verticalMargin, Constants.pixelsPerMinute * range - Constants.verticalMargin]);
