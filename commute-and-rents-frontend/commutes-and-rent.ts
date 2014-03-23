@@ -299,13 +299,12 @@ module CommutesAndRent {
 
 module CommutesAndRent {
 
-    export class Constants {
+    export class ChartConstants {
 
         public static pixelsPerMinute: number = 15;
         public static barSpacing: number = 2;
 
-        public static verticalMargin: number = 50;
-        public static horizontalMargin: number = 50;
+        public static margins: any = { top: 50, right: 100, bottom: 50, left: 50 };
 
         public static xAxisOffset: number = 40;
         public static yAxisOffset: number = 40;
@@ -327,8 +326,17 @@ module CommutesAndRent {
             AxisBuilders.makeYAxis(this.yScale);
 
             this.calculateOffsets(dataset);
+
+            Graphics.setChartHeight(dataset);
         }
-        
+
+        private static setChartHeight(dataset: RentTime[]) {
+            var times: number[] = dataset.map(departure => departure.time);
+            var range: number = d3.max(times) - d3.min(times);
+
+            $("#chart").height(ChartConstants.pixelsPerMinute*range);
+        }
+
         private calculateOffsets(dataset: RentTime[]): void {
             for (var i: number = 0; i < dataset.length; i++) {
 
@@ -347,7 +355,8 @@ module CommutesAndRent {
         public rentRectAttrs(): any {
             return {
                 "class": "rent rect",
-                height: () => Constants.pixelsPerMinute - Constants.barSpacing,
+                x: (d: RentTime) => this.xScale(d.lowerQuartile),
+                height: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
                 width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
                 opacity: 0.2
             };
@@ -355,14 +364,14 @@ module CommutesAndRent {
 
         public normalPositionAttrs(): any {
             return {
-                transform: (d: RentTime) => "translate(" + this.xScale(d.lowerQuartile) +","+ this.yScale(d.time) + ")",
+                transform: (d: RentTime) => "translate(0,"+ this.yScale(d.time) + ")",
                 "class": "rent g",
             };
         }
 
         public expandedPositionAttrs(expandedTime: number): any {
             return {
-                transform: (d: RentTime) => "translate(" + this.xScale(d.lowerQuartile) + "," + this.yScale(this.offset(d, expandedTime)) + ")"
+                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")"
             };
         }
 
@@ -388,16 +397,16 @@ module CommutesAndRent {
 
             return d3.scale.linear()
                 .domain([lowestRent, highestRent])
-                .range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);
+                .range([ChartConstants.margins.left, $("#chart").width() - ChartConstants.margins.right]);
         }
 
         public static makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
             var times: number[] = dataset.map(departure => departure.time);
             var range: number = d3.max(times) - d3.min(times);
-            console.log(d3.min(times));
+
             return d3.scale.linear()
                 .domain([d3.max(times), d3.min(times)])
-                .range([Constants.verticalMargin, Constants.pixelsPerMinute * range - Constants.verticalMargin]);
+                .range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]);
         }
     }
 
@@ -409,16 +418,16 @@ module CommutesAndRent {
                 .orient("top");
 
             d3.select(".x.axis")
-                .attr("transform", "translate(0," + Constants.xAxisOffset + ")")
+                .attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")")
                 .transition()
                 .call(axis);
         }
 
         public static makeYAxis(yScale: D3.Scale.LinearScale): void {
-            var axis: D3.Svg.Axis = d3.svg.axis().scale(yScale).orient("right");
+            var axis: D3.Svg.Axis = d3.svg.axis().scale(yScale).orient("left");
 
             d3.select(".y.axis")
-                .attr("transform", "translate(" + ($("#chart").width() - Constants.yAxisOffset) + ",0)")
+                .attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)")
                 .transition()
                 .call(axis);
         }

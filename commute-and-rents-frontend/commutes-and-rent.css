@@ -7,7 +7,7 @@ html, body, #app {
 }
 
 #map-and-controls {
-    float:left;
+    position: fixed;
     height: 100%;
     width: 50%;
 }
@@ -32,10 +32,6 @@ html, body, #app {
 
 #chart-holder {
     height: 100%;
-    float: left;
+    float: right;
     width: 50%;
-}
-
-#chart {
-    height: 100%;
 }
