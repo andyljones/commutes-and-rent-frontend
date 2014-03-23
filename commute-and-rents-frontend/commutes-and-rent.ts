@@ -229,7 +229,7 @@ module CommutesAndRent {
 
         private initialize(): void {
             this.view = new ChartView(this.model);
-            d3.selectAll(".rent.rect").on("mouseover", d => this.notifyAndHighlight(d.name));
+            d3.selectAll(".rent.g").on("mouseover", d => { this.notifyAndHighlight(d.name); });
         }
 
         public updateBedroomCount(bedroomCount: number) {
@@ -282,11 +282,12 @@ module CommutesAndRent {
 
             var selection = this.svg.selectAll(".rent.g").data(dataset).enter()
                 .append("g")
-                .attr(this.graphics.normalPositionAttrs());
+                .attr(this.graphics.normalPositionAttrs())
+                .attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
             selection
                 .append("rect")
-                .attr(this.graphics.barAttrs(this.currentlyHighlighted))
+                .attr(this.graphics.barAttrs())
                 .on('click', d => this.expandTime(d.time));
 
             selection
@@ -303,12 +304,12 @@ module CommutesAndRent {
 
             selection
                 .transition()
-                .attr(this.graphics.normalPositionAttrs());
+                .attr(this.graphics.normalPositionAttrs())
+                .attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
             selection.select(".rent.rect")
-                .on('click', d => this.expandTime(d.time))
-                .transition()
-                .attr(this.graphics.barAttrs(this.currentlyHighlighted));
+                .attr(this.graphics.barAttrs())
+                .on('click', d => this.expandTime(d.time));
 
             selection.select(".rent.text")
                 .transition()
@@ -342,8 +343,11 @@ module CommutesAndRent {
         public highlightStation(name: string) {
             this.currentlyHighlighted = name;
 
-            d3.selectAll(".rent.rect")
-                .attr(this.graphics.barAttrs(this.currentlyHighlighted));
+            var selection = d3.selectAll(".rent.g")
+                .attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+
+            // Bring selected node to the front:
+            selection.sort((a: RentTime, b) => a.name === name ? 1 : 0); 
         }
     }
 
@@ -425,14 +429,19 @@ module CommutesAndRent {
             }
         }
 
-        public barAttrs(highlighted: string): any {
+        public colorAttrs(highlighted: string): any {
+            return {
+                fill: d => d.name === highlighted ? "orange" : "blue",
+                opacity: d => d.name === highlighted ? 1 : 0.2
+            };
+        }
+
+        public barAttrs(): any {
             return {
                 "class": "rent rect",
                 x: (d: RentTime) => this.xScale(d.lowerQuartile),
                 height: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
-                width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
-                fill: d => d.name === highlighted? "orange" : "blue",
-                opacity: d => d.name === highlighted? 1 : 0.2
+                width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile)
             };
         }
 

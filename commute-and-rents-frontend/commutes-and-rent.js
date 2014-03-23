@@ -213,8 +213,8 @@ var CommutesAndRent;
         ChartController.prototype.initialize = function () {
             var _this = this;
             this.view = new CommutesAndRent.ChartView(this.model);
-            d3.selectAll(".rent.rect").on("mouseover", function (d) {
-                return _this.notifyAndHighlight(d.name);
+            d3.selectAll(".rent.g").on("mouseover", function (d) {
+                _this.notifyAndHighlight(d.name);
             });
         };
 
@@ -265,9 +265,9 @@ var CommutesAndRent;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(this.graphics.normalPositionAttrs());
+            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
-            selection.append("rect").attr(this.graphics.barAttrs(this.currentlyHighlighted)).on('click', function (d) {
+            selection.append("rect").attr(this.graphics.barAttrs()).on('click', function (d) {
                 return _this.expandTime(d.time);
             });
 
@@ -283,11 +283,11 @@ var CommutesAndRent;
                 return rentTime.name;
             });
 
-            selection.transition().attr(this.graphics.normalPositionAttrs());
+            selection.transition().attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
 
-            selection.select(".rent.rect").on('click', function (d) {
+            selection.select(".rent.rect").attr(this.graphics.barAttrs()).on('click', function (d) {
                 return _this.expandTime(d.time);
-            }).transition().attr(this.graphics.barAttrs(this.currentlyHighlighted));
+            });
 
             selection.select(".rent.text").transition().attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
 
@@ -323,7 +323,12 @@ var CommutesAndRent;
         ChartView.prototype.highlightStation = function (name) {
             this.currentlyHighlighted = name;
 
-            d3.selectAll(".rent.rect").attr(this.graphics.barAttrs(this.currentlyHighlighted));
+            var selection = d3.selectAll(".rent.g").attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+
+            // Bring selected node to the front:
+            selection.sort(function (a, b) {
+                return a.name === name ? 1 : 0;
+            });
         };
         return ChartView;
     })();
@@ -398,7 +403,18 @@ var CommutesAndRent;
             }
         };
 
-        Graphics.prototype.barAttrs = function (highlighted) {
+        Graphics.prototype.colorAttrs = function (highlighted) {
+            return {
+                fill: function (d) {
+                    return d.name === highlighted ? "orange" : "blue";
+                },
+                opacity: function (d) {
+                    return d.name === highlighted ? 1 : 0.2;
+                }
+            };
+        };
+
+        Graphics.prototype.barAttrs = function () {
             var _this = this;
             return {
                 "class": "rent rect",
@@ -410,12 +426,6 @@ var CommutesAndRent;
                 },
                 width: function (d) {
                     return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
-                },
-                fill: function (d) {
-                    return d.name === highlighted ? "orange" : "blue";
-                },
-                opacity: function (d) {
-                    return d.name === highlighted ? 1 : 0.2;
                 }
             };
         };
