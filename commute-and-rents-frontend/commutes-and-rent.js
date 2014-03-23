@@ -22,6 +22,10 @@ window.onload = function () {
     map.mouseoverListener = function (name) {
         return controller.highlight(name);
     };
+
+    controller.mouseoverListener = function (name) {
+        return map.highlightMarker(name);
+    };
 };
 
 var CommutesAndRent;
@@ -84,8 +88,8 @@ var CommutesAndRent;
             };
             this.mouseoverListener = function () {
             };
-            this.mouseoutListener = function () {
-            };
+            this.markerLookup = d3.map();
+            this.currentlyHighlightedMarker = null;
             this.mapObject = Map.buildMap();
 
             Q($.getJSON(Map.locationDataPath)).then(function (data) {
@@ -105,20 +109,39 @@ var CommutesAndRent;
             for (var i = 0; i < locations.length; i++) {
                 var latLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                new StationMarker(locations[i].name, latLng).addTo(this.mapObject).on("click", function (e) {
+                var marker = new StationMarker(locations[i].name, latLng, { icon: Map.normalMarker }).addTo(this.mapObject).on("click", function (e) {
                     return _this.clickListener(e.target.name);
                 }).on("mouseover", function (e) {
-                    return _this.mouseoverListener(e.target.name);
-                }).on("mouseout", function (e) {
-                    return _this.mouseoutListener(e.target.name);
+                    return _this.notifyAndHighlight(e.target.name);
                 });
+
+                this.markerLookup.set(locations[i].name, marker);
             }
+        };
+
+        Map.prototype.notifyAndHighlight = function (name) {
+            this.mouseoverListener(name);
+            this.highlightMarker(name);
+        };
+
+        Map.prototype.highlightMarker = function (name) {
+            if (this.currentlyHighlightedMarker !== null) {
+                this.currentlyHighlightedMarker.setIcon(Map.normalMarker);
+            }
+
+            var marker = this.markerLookup.get(name);
+            marker.setIcon(Map.highlightMarker);
+
+            this.currentlyHighlightedMarker = marker;
         };
         Map.mapTileURLTemplate = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
         Map.mapId = "coffeetable.hinlda0l";
 
         Map.defaultCenter = new L.LatLng(51.505, -0.09);
         Map.defaultZoom = 13;
+
+        Map.normalMarker = L.AwesomeMarkers.icon({ markerColor: 'blue' });
+        Map.highlightMarker = L.AwesomeMarkers.icon({ markerColor: 'orange' });
 
         Map.locationDataPath = "preprocessor-output/processed-locations/locations.json";
         return Map;
@@ -177,6 +200,8 @@ var CommutesAndRent;
     var ChartController = (function () {
         function ChartController() {
             var _this = this;
+            this.mouseoverListener = function () {
+            };
             this.model = new CommutesAndRent.ChartModel();
             Q.all([
                 this.model.loadRentData(ChartController.defaultNumberOfBedrooms),
@@ -186,7 +211,11 @@ var CommutesAndRent;
             });
         }
         ChartController.prototype.initialize = function () {
+            var _this = this;
             this.view = new CommutesAndRent.ChartView(this.model);
+            d3.selectAll(".rent.rect").on("mouseover", function (d) {
+                return _this.notifyAndHighlight(d.name);
+            });
         };
 
         ChartController.prototype.updateBedroomCount = function (bedroomCount) {
@@ -199,6 +228,11 @@ var CommutesAndRent;
 
         ChartController.prototype.updateDestination = function (stationName) {
             this.model.loadCommuteData(this.model.commutes.arrivalTime, stationName);
+        };
+
+        ChartController.prototype.notifyAndHighlight = function (name) {
+            this.mouseoverListener(name);
+            this.highlight(name);
         };
 
         ChartController.prototype.highlight = function (name) {
@@ -378,7 +412,7 @@ var CommutesAndRent;
                     return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
                 },
                 fill: function (d) {
-                    return d.name === highlighted ? "orange" : "black";
+                    return d.name === highlighted ? "orange" : "blue";
                 },
                 opacity: function (d) {
                     return d.name === highlighted ? 1 : 0.2;

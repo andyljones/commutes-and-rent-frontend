@@ -8,9 +8,15 @@
 
     map.clickListener = (name: string) => controller.updateDestination(name);
     map.mouseoverListener = (name: string) => controller.highlight(name);
+
+    controller.mouseoverListener = (name: string) => map.highlightMarker(name);
 };
 
 declare function d3slider(): any;
+
+declare module L {
+    export var AwesomeMarkers: any;
+}
 
 module CommutesAndRent {
         
@@ -64,8 +70,10 @@ module CommutesAndRent {
 
         public clickListener: (name: string) => void = () => { };
         public mouseoverListener: (name: string) => void = () => { };
-        public mouseoutListener: (name: string) => void = () => { };
 
+        private markerLookup: D3.Map = d3.map();
+        private currentlyHighlightedMarker: L.Marker = null;
+        
         private mapObject: L.Map;
 
         private static mapTileURLTemplate: string = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
@@ -73,6 +81,9 @@ module CommutesAndRent {
 
         private static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
         private static defaultZoom: number = 13;
+
+        private static normalMarker = L.AwesomeMarkers.icon({ markerColor: 'blue' });
+        private static highlightMarker = L.AwesomeMarkers.icon({ markerColor: 'orange' });
 
         private static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
 
@@ -98,14 +109,31 @@ module CommutesAndRent {
             {
                 var latLng: L.LatLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                new StationMarker(locations[i].name, latLng)
+                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: Map.normalMarker })
                     .addTo(this.mapObject)
                     .on("click", (e: L.LeafletMouseEvent) => this.clickListener(e.target.name))
-                    .on("mouseover", (e: L.LeafletMouseEvent) => this.mouseoverListener(e.target.name))
-                    .on("mouseout", (e: L.LeafletMouseEvent) => this.mouseoutListener(e.target.name));
+                    .on("mouseover", (e: L.LeafletMouseEvent) => this.notifyAndHighlight(e.target.name));
+
+                this.markerLookup.set(locations[i].name, marker);
             }
         }
 
+        private notifyAndHighlight(name: string): void {
+            this.mouseoverListener(name);
+            this.highlightMarker(name);
+        }
+
+        public highlightMarker(name: string): void {
+
+            if (this.currentlyHighlightedMarker !== null) {
+                this.currentlyHighlightedMarker.setIcon(Map.normalMarker);
+            }
+
+            var marker = this.markerLookup.get(name);
+            marker.setIcon(Map.highlightMarker);
+
+            this.currentlyHighlightedMarker = marker;
+        }
     }
 
     interface Location {
@@ -181,6 +209,8 @@ module CommutesAndRent {
 
     export class ChartController
     {
+        public mouseoverListener: (name: string) => void = () => { };
+
         private model: ChartModel;
         private view: ChartView;
 
@@ -199,6 +229,7 @@ module CommutesAndRent {
 
         private initialize(): void {
             this.view = new ChartView(this.model);
+            d3.selectAll(".rent.rect").on("mouseover", d => this.notifyAndHighlight(d.name));
         }
 
         public updateBedroomCount(bedroomCount: number) {
@@ -211,6 +242,11 @@ module CommutesAndRent {
 
         public updateDestination(stationName: string) {
             this.model.loadCommuteData(this.model.commutes.arrivalTime, stationName);
+        }
+
+        private notifyAndHighlight(name: string) {
+            this.mouseoverListener(name);
+            this.highlight(name);
         }
 
         public highlight(name: string) {
@@ -395,7 +431,7 @@ module CommutesAndRent {
                 x: (d: RentTime) => this.xScale(d.lowerQuartile),
                 height: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
                 width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile),
-                fill: d => d.name === highlighted? "orange" : "black",
+                fill: d => d.name === highlighted? "orange" : "blue",
                 opacity: d => d.name === highlighted? 1 : 0.2
             };
         }
