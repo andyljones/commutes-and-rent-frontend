@@ -231,7 +231,7 @@ var CommutesAndRent;
 
             d3.selectAll(".rent.rect").on('click', function (d) {
                 return _this.expandTime(graphics, d);
-            });
+            }).transition().attr(graphics.rentRectAttrs());
 
             this.currentlyExpanded = null;
         };
