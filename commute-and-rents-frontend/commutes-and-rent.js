@@ -109,7 +109,7 @@ var CommutesAndRent;
             for (var i = 0; i < locations.length; i++) {
                 var latLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                var marker = new StationMarker(locations[i].name, latLng, { icon: Map.normalMarker }).addTo(this.mapObject).on("click", function (e) {
+                var marker = new StationMarker(locations[i].name, latLng, { icon: Map.defaultIcon }).addTo(this.mapObject).on("click", function (e) {
                     return _this.clickListener(e.target.name);
                 }).on("mouseover", function (e) {
                     return _this.notifyAndHighlight(e.target.name);
@@ -126,11 +126,11 @@ var CommutesAndRent;
 
         Map.prototype.highlightMarker = function (name) {
             if (this.currentlyHighlightedMarker !== null) {
-                this.currentlyHighlightedMarker.setIcon(Map.normalMarker);
+                this.currentlyHighlightedMarker.setIcon(Map.defaultIcon);
             }
 
             var marker = this.markerLookup.get(name);
-            marker.setIcon(Map.highlightMarker);
+            marker.setIcon(Map.highlightIcon);
 
             this.currentlyHighlightedMarker = marker;
         };
@@ -140,8 +140,8 @@ var CommutesAndRent;
         Map.defaultCenter = new L.LatLng(51.505, -0.09);
         Map.defaultZoom = 13;
 
-        Map.normalMarker = L.AwesomeMarkers.icon({ markerColor: 'blue' });
-        Map.highlightMarker = L.AwesomeMarkers.icon({ markerColor: 'orange' });
+        Map.defaultIcon = L.icon({ iconUrl: "default-icon.png" });
+        Map.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png" });
 
         Map.locationDataPath = "preprocessor-output/processed-locations/locations.json";
         return Map;
@@ -463,7 +463,7 @@ var CommutesAndRent;
                     return _this.chartWidth - ChartConstants.margins.right;
                 },
                 y: function () {
-                    return ChartConstants.pixelsPerMinute;
+                    return ChartConstants.pixelsPerMinute - ChartConstants.barSpacing;
                 }
             };
         };

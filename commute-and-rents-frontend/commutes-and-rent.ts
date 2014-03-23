@@ -14,10 +14,6 @@
 
 declare function d3slider(): any;
 
-declare module L {
-    export var AwesomeMarkers: any;
-}
-
 module CommutesAndRent {
         
     export class Sliders {
@@ -82,8 +78,8 @@ module CommutesAndRent {
         private static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
         private static defaultZoom: number = 13;
 
-        private static normalMarker = L.AwesomeMarkers.icon({ markerColor: 'blue' });
-        private static highlightMarker = L.AwesomeMarkers.icon({ markerColor: 'orange' });
+        private static defaultIcon: L.Icon = L.icon({iconUrl: "default-icon.png"});
+        private static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png" });
 
         private static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
 
@@ -109,7 +105,7 @@ module CommutesAndRent {
             {
                 var latLng: L.LatLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: Map.normalMarker })
+                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: Map.defaultIcon })
                     .addTo(this.mapObject)
                     .on("click", (e: L.LeafletMouseEvent) => this.clickListener(e.target.name))
                     .on("mouseover", (e: L.LeafletMouseEvent) => this.notifyAndHighlight(e.target.name));
@@ -126,11 +122,11 @@ module CommutesAndRent {
         public highlightMarker(name: string): void {
 
             if (this.currentlyHighlightedMarker !== null) {
-                this.currentlyHighlightedMarker.setIcon(Map.normalMarker);
+                this.currentlyHighlightedMarker.setIcon(Map.defaultIcon);
             }
 
             var marker = this.markerLookup.get(name);
-            marker.setIcon(Map.highlightMarker);
+            marker.setIcon(Map.highlightIcon);
 
             this.currentlyHighlightedMarker = marker;
         }
@@ -466,7 +462,7 @@ module CommutesAndRent {
             return {
                 "class": "rent text",
                 x: () => this.chartWidth - ChartConstants.margins.right,
-                y: () => ChartConstants.pixelsPerMinute
+                y: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing
             };
         }
 

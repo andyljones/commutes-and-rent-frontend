@@ -18,24 +18,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="commutes-and-rent.css" />
+    <Content Include="default-icon.png" />
+    <Content Include="highlighted-icon.png" />
     <Content Include="index.html" />
     <Content Include="library\d3.slider\d3.slider.css" />
     <Content Include="library\d3.slider\d3.slider.js" />
     <Content Include="library\d3\d3.min.js" />
-    <Content Include="library\font-awesome-4.0.3\css\font-awesome.css" />
-    <Content Include="library\font-awesome-4.0.3\css\font-awesome.min.css" />
-    <Content Include="library\font-awesome-4.0.3\fonts\fontawesome-webfont.svg" />
     <Content Include="library\jquery\jquery-2.1.0.min.js" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-matte%402x.png" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-matte.png" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-plain.png" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-shadow%402x.png" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-shadow.png" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-soft%402x.png" />
-    <Content Include="library\leaflet.awesome-markers\images\markers-soft.png" />
-    <Content Include="library\leaflet.awesome-markers\leaflet.awesome-markers.css" />
-    <Content Include="library\leaflet.awesome-markers\leaflet.awesome-markers.js" />
-    <Content Include="library\leaflet.awesome-markers\leaflet.awesome-markers.min.js" />
     <Content Include="library\leaflet\images\layers-2x.png" />
     <Content Include="library\leaflet\images\layers.png" />
     <Content Include="library\leaflet\images\marker-icon-2x.png" />
@@ -6518,36 +6507,6 @@
     <Content Include="preprocessor-output\processed-departure-times\960\Wood Lane.json" />
     <Content Include="preprocessor-output\processed-departure-times\960\Woodford.json" />
     <Content Include="preprocessor-output\processed-departure-times\960\Woodside Park.json" />
-    <Content Include="library\font-awesome-4.0.3\fonts\fontawesome-webfont.eot" />
-    <Content Include="library\font-awesome-4.0.3\fonts\fontawesome-webfont.ttf" />
-    <Content Include="library\font-awesome-4.0.3\fonts\fontawesome-webfont.woff" />
-    <Content Include="library\font-awesome-4.0.3\fonts\FontAwesome.otf" />
-    <Content Include="library\font-awesome-4.0.3\less\bordered-pulled.less" />
-    <Content Include="library\font-awesome-4.0.3\less\core.less" />
-    <Content Include="library\font-awesome-4.0.3\less\fixed-width.less" />
-    <Content Include="library\font-awesome-4.0.3\less\font-awesome.less" />
-    <Content Include="library\font-awesome-4.0.3\less\icons.less" />
-    <Content Include="library\font-awesome-4.0.3\less\larger.less" />
-    <Content Include="library\font-awesome-4.0.3\less\list.less" />
-    <Content Include="library\font-awesome-4.0.3\less\mixins.less" />
-    <Content Include="library\font-awesome-4.0.3\less\path.less" />
-    <Content Include="library\font-awesome-4.0.3\less\rotated-flipped.less" />
-    <Content Include="library\font-awesome-4.0.3\less\spinning.less" />
-    <Content Include="library\font-awesome-4.0.3\less\stacked.less" />
-    <Content Include="library\font-awesome-4.0.3\less\variables.less" />
-    <Content Include="library\font-awesome-4.0.3\scss\font-awesome.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_bordered-pulled.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_core.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_fixed-width.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_icons.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_larger.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_list.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_mixins.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_path.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_rotated-flipped.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_spinning.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_stacked.scss" />
-    <Content Include="library\font-awesome-4.0.3\scss\_variables.scss" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
