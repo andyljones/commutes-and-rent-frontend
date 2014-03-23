@@ -50,8 +50,8 @@ module CommutesAndRent {
         public static maxTime: number = 960;
         public static stepTime: number = 480;  
 
-        public static minBedroom: number = 2;
-        public static maxBedroom: number = 3;
+        public static minBedroom: number = 1;
+        public static maxBedroom: number = 4;
         public static stepBedroom: number = 1;
     }
 }
@@ -141,7 +141,7 @@ module CommutesAndRent
 
         public loadRentData(numberOfBedrooms: number): Q.Promise<void> {
             var filepath: string = ChartModel.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-
+            console.log(filepath);
             return Q($.getJSON(filepath)).then(data => { this.rents = data; this.updateSubscriber(); return null; });
         }
     }
@@ -180,7 +180,7 @@ module CommutesAndRent {
 
         private static defaultArrivalTime: number = 480;
         private static defaultDestination: string = "Barbican";
-        private static defaultNumberOfBedrooms: number  = 2;
+        private static defaultNumberOfBedrooms: number  = 1;
 
         constructor() { 
             this.model = new ChartModel();
@@ -231,10 +231,10 @@ module CommutesAndRent {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new Graphics(dataset);
 
-            this.svg.selectAll(".rent.g").data(dataset).enter()
+            var selection = this.svg.selectAll(".rent.g").data(dataset).enter()
                 .append("g").attr(graphics.normalPositionAttrs());
 
-            d3.selectAll(".rent.g")
+            selection
                 .append("rect").attr(graphics.rentRectAttrs())
                 .on('click', d => this.expandTime(graphics, d));
         }
@@ -243,11 +243,13 @@ module CommutesAndRent {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new Graphics(dataset);
 
-            d3.selectAll(".rent.g").data(dataset, rentTime => rentTime.name)
+            var selection = d3.selectAll(".rent.g").data(dataset, rentTime => rentTime.name);
+
+            selection
                 .transition()
                 .attr(graphics.normalPositionAttrs());
 
-            d3.selectAll(".rent.rect")
+            selection.select(".rent.rect")
                 .on('click', d => this.expandTime(graphics, d))
                 .transition()
                 .attr(graphics.rentRectAttrs());
@@ -381,7 +383,7 @@ module CommutesAndRent {
         public static makeXScale(dataset: RentTime[]): D3.Scale.LinearScale {
             var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
             var highestRent: number = d3.max(dataset, stat => stat.upperQuartile);
-
+            console.log(dataset.filter(d => d.upperQuartile === highestRent));
             return d3.scale.linear()
                 .domain([lowestRent, highestRent])
                 .range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);

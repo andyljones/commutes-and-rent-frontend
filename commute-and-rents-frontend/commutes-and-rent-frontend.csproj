@@ -584,6 +584,10 @@
     <Content Include="preprocessor-output\processed-locations\locations.json" />
     <Content Include="preprocessor-output\processed-rents\3-bedroom-rents.json" />
     <Content Include="preprocessor-output\processed-rents\2-bedroom-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\1-bedroom-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\4-bedroom-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\room-rents.json" />
+    <Content Include="preprocessor-output\processed-rents\studio-rents.json" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>

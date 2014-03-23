@@ -62,8 +62,8 @@ var CommutesAndRent;
         SliderConstants.maxTime = 960;
         SliderConstants.stepTime = 480;
 
-        SliderConstants.minBedroom = 2;
-        SliderConstants.maxBedroom = 3;
+        SliderConstants.minBedroom = 1;
+        SliderConstants.maxBedroom = 4;
         SliderConstants.stepBedroom = 1;
         return SliderConstants;
     })();
@@ -144,7 +144,7 @@ var CommutesAndRent;
         ChartModel.prototype.loadRentData = function (numberOfBedrooms) {
             var _this = this;
             var filepath = ChartModel.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-
+            console.log(filepath);
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.rents = data;
                 _this.updateSubscriber();
@@ -188,7 +188,7 @@ var CommutesAndRent;
         };
         ChartController.defaultArrivalTime = 480;
         ChartController.defaultDestination = "Barbican";
-        ChartController.defaultNumberOfBedrooms = 2;
+        ChartController.defaultNumberOfBedrooms = 1;
         return ChartController;
     })();
     CommutesAndRent.ChartController = ChartController;
@@ -213,9 +213,9 @@ var CommutesAndRent;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new CommutesAndRent.Graphics(dataset);
 
-            this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(graphics.normalPositionAttrs());
+            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").attr(graphics.normalPositionAttrs());
 
-            d3.selectAll(".rent.g").append("rect").attr(graphics.rentRectAttrs()).on('click', function (d) {
+            selection.append("rect").attr(graphics.rentRectAttrs()).on('click', function (d) {
                 return _this.expandTime(graphics, d);
             });
         };
@@ -225,11 +225,13 @@ var CommutesAndRent;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             var graphics = new CommutesAndRent.Graphics(dataset);
 
-            d3.selectAll(".rent.g").data(dataset, function (rentTime) {
+            var selection = d3.selectAll(".rent.g").data(dataset, function (rentTime) {
                 return rentTime.name;
-            }).transition().attr(graphics.normalPositionAttrs());
+            });
 
-            d3.selectAll(".rent.rect").on('click', function (d) {
+            selection.transition().attr(graphics.normalPositionAttrs());
+
+            selection.select(".rent.rect").on('click', function (d) {
                 return _this.expandTime(graphics, d);
             }).transition().attr(graphics.rentRectAttrs());
 
@@ -376,7 +378,9 @@ var CommutesAndRent;
             var highestRent = d3.max(dataset, function (stat) {
                 return stat.upperQuartile;
             });
-
+            console.log(dataset.filter(function (d) {
+                return d.upperQuartile === highestRent;
+            }));
             return d3.scale.linear().domain([lowestRent, highestRent]).range([Constants.horizontalMargin, $("#chart").width() - Constants.horizontalMargin]);
         };
 
