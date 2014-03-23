@@ -421,7 +421,7 @@ var CommutesAndRent;
                     return d.name === highlighted ? "orange" : "blue";
                 },
                 opacity: function (d) {
-                    return d.name === highlighted ? 1 : 0.2;
+                    return d.name === highlighted ? 1 : 0.4;
                 }
             };
         };
@@ -471,6 +471,9 @@ var CommutesAndRent;
                 "stroke-width": 0,
                 opacity: function (d) {
                     return d.time === expandedTime ? 0.2 : 0;
+                },
+                "pointer-events": function (d) {
+                    return d.time === expandedTime ? "auto" : "none";
                 }
             };
         };

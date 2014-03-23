@@ -443,7 +443,7 @@ module CommutesAndRent {
         public colorAttrs(highlighted: string): any {
             return {
                 fill: d => d.name === highlighted ? "orange" : "blue",
-                opacity: d => d.name === highlighted ? 1 : 0.2
+                opacity: d => d.name === highlighted ? 1 : 0.4
             };
         }
 
@@ -477,7 +477,8 @@ module CommutesAndRent {
                 height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
                 "fill": "black",
                 "stroke-width": 0,
-                opacity: (d: RentTime) => d.time === expandedTime? 0.2 : 0
+                opacity: (d: RentTime) => d.time === expandedTime ? 0.2 : 0,
+                "pointer-events": (d: RentTime) => d.time === expandedTime ? "auto" : "none"
             };
         }
 
