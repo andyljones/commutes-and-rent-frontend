@@ -221,6 +221,8 @@ var CommutesAndRent;
             selection.append("rect").attr(graphics.rentRectAttrs()).on('click', function (d) {
                 return _this.expandTime(graphics, d);
             });
+
+            selection.append("text").attr(graphics.normalLabelAttrs()).text(graphics.normalLabelText());
         };
 
         ChartView.prototype.update = function () {
@@ -238,6 +240,8 @@ var CommutesAndRent;
                 return _this.expandTime(graphics, d);
             }).transition().attr(graphics.rentRectAttrs());
 
+            selection.select(".rent.text").transition().attr(graphics.normalLabelAttrs()).text(graphics.normalLabelText());
+
             this.currentlyExpanded = null;
         };
 
@@ -246,9 +250,11 @@ var CommutesAndRent;
 
             if (d.time === this.currentlyExpanded) {
                 data.transition().attr(graphics.normalPositionAttrs());
+                data.select(".rent.text").text(graphics.normalLabelText());
                 this.currentlyExpanded = null;
             } else {
                 data.transition().attr(graphics.expandedPositionAttrs(d.time));
+                data.select(".rent.text").text(graphics.expandedLabelText(d.time));
                 this.currentlyExpanded = d.time;
             }
         };
@@ -302,7 +308,9 @@ var CommutesAndRent;
         function Graphics(dataset) {
             this.sizes = d3.map();
             this.indices = d3.map();
-            this.xScale = ScaleBuilders.makeXScale(dataset);
+            this.chartWidth = $("#chart").width();
+
+            this.xScale = ScaleBuilders.makeXScale(dataset, this.chartWidth);
             this.yScale = ScaleBuilders.makeYScale(dataset);
 
             AxisBuilders.makeXAxis(this.xScale);
@@ -367,6 +375,46 @@ var CommutesAndRent;
             return {
                 transform: function (d) {
                     return "translate(0," + _this.yScale(_this.offset(d, expandedTime)) + ")";
+                },
+                "class": "rent g"
+            };
+        };
+
+        Graphics.prototype.normalLabelAttrs = function () {
+            var _this = this;
+            return {
+                "class": "rent text",
+                x: function () {
+                    return _this.chartWidth - ChartConstants.margins.right;
+                },
+                y: function () {
+                    return ChartConstants.pixelsPerMinute;
+                }
+            };
+        };
+
+        Graphics.prototype.expandedLabelText = function (expandedTime) {
+            var _this = this;
+            return function (d) {
+                if (d.time === expandedTime || (_this.indices[d.name] === 0 && _this.sizes[d.time] === 1)) {
+                    return d.name;
+                } else if (_this.indices[d.name] === 0 && _this.sizes[d.time] > 1) {
+                    return "+";
+                } else {
+                    return "";
+                }
+            };
+        };
+
+        Graphics.prototype.normalLabelText = function () {
+            var _this = this;
+            return function (d) {
+                if (_this.indices[d.name] === 0 && _this.sizes[d.time] === 1) {
+                    return d.name;
+                } else if (_this.indices[d.name] === 0 && _this.sizes[d.time] > 1) {
+                    return "+";
+                } else {
+                    return "";
                 }
             };
         };
@@ -387,7 +435,7 @@ var CommutesAndRent;
     var ScaleBuilders = (function () {
         function ScaleBuilders() {
         }
-        ScaleBuilders.makeXScale = function (dataset) {
+        ScaleBuilders.makeXScale = function (dataset, chartWidth) {
             var lowestRent = d3.min(dataset, function (stat) {
                 return stat.lowerQuartile;
             });
@@ -395,7 +443,7 @@ var CommutesAndRent;
                 return stat.upperQuartile;
             });
 
-            return d3.scale.linear().domain([lowestRent, highestRent]).range([ChartConstants.margins.left, $("#chart").width() - ChartConstants.margins.right]);
+            return d3.scale.linear().domain([lowestRent, highestRent]).range([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]);
         };
 
         ScaleBuilders.makeYScale = function (dataset) {

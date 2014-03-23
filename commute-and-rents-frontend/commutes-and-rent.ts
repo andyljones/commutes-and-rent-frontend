@@ -233,11 +233,18 @@ module CommutesAndRent {
             var graphics = new Graphics(dataset);
 
             var selection = this.svg.selectAll(".rent.g").data(dataset).enter()
-                .append("g").attr(graphics.normalPositionAttrs());
+                .append("g")
+                .attr(graphics.normalPositionAttrs());
 
             selection
-                .append("rect").attr(graphics.rentRectAttrs())
+                .append("rect")
+                .attr(graphics.rentRectAttrs())
                 .on('click', d => this.expandTime(graphics, d));
+
+            selection
+                .append("text")
+                .attr(graphics.normalLabelAttrs())
+                .text(graphics.normalLabelText());
         }
 
         private update(): void {
@@ -255,6 +262,11 @@ module CommutesAndRent {
                 .transition()
                 .attr(graphics.rentRectAttrs());
 
+            selection.select(".rent.text")
+                .transition()
+                .attr(graphics.normalLabelAttrs())
+                .text(graphics.normalLabelText());
+
             this.currentlyExpanded = null;
         }
 
@@ -263,9 +275,11 @@ module CommutesAndRent {
 
             if (d.time === this.currentlyExpanded) {
                 data.transition().attr(graphics.normalPositionAttrs());
+                data.select(".rent.text").text(graphics.normalLabelText());
                 this.currentlyExpanded = null;
             } else {
                 data.transition().attr(graphics.expandedPositionAttrs(d.time));
+                data.select(".rent.text").text(graphics.expandedLabelText(d.time));
                 this.currentlyExpanded = d.time;
             }
         }
@@ -318,8 +332,12 @@ module CommutesAndRent {
         private sizes: D3.Map = d3.map();
         private indices: D3.Map = d3.map();
 
+        private chartWidth: number;
+
         constructor(dataset: RentTime[]) {
-            this.xScale = ScaleBuilders.makeXScale(dataset);
+            this.chartWidth = $("#chart").width();
+
+            this.xScale = ScaleBuilders.makeXScale(dataset, this.chartWidth);
             this.yScale = ScaleBuilders.makeYScale(dataset);
 
             AxisBuilders.makeXAxis(this.xScale);
@@ -371,7 +389,40 @@ module CommutesAndRent {
 
         public expandedPositionAttrs(expandedTime: number): any {
             return {
-                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")"
+                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")",
+                "class": "rent g"
+            };
+        }
+
+        public normalLabelAttrs(): any {
+            return {
+                "class": "rent text",
+                x: () => this.chartWidth - ChartConstants.margins.right,
+                y: () => ChartConstants.pixelsPerMinute
+            };
+        }
+
+        public expandedLabelText(expandedTime: number): any {
+            return d => {
+                if (d.time === expandedTime || (this.indices[d.name] === 0 && this.sizes[d.time] === 1)) {
+                    return d.name;
+                } else if (this.indices[d.name] === 0 && this.sizes[d.time] > 1) {
+                    return "+";
+                } else {
+                    return "";
+                }
+            };
+        }
+                
+        public normalLabelText(): any {
+            return d => {
+                if (this.indices[d.name] === 0 && this.sizes[d.time] === 1) {
+                    return d.name;
+                } else if (this.indices[d.name] === 0 && this.sizes[d.time] > 1) {
+                    return "+";
+                } else {
+                    return "";
+                }
             };
         }
 
@@ -390,14 +441,13 @@ module CommutesAndRent {
 
     class ScaleBuilders {
 
-        public static makeXScale(dataset: RentTime[]): D3.Scale.LinearScale {
+        public static makeXScale(dataset: RentTime[], chartWidth: number): D3.Scale.LinearScale {
             var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
             var highestRent: number = d3.max(dataset, stat => stat.upperQuartile);
 
-
             return d3.scale.linear()
                 .domain([lowestRent, highestRent])
-                .range([ChartConstants.margins.left, $("#chart").width() - ChartConstants.margins.right]);
+                .range([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]);
         }
 
         public static makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
