@@ -56,7 +56,8 @@ module CommutesAndRent {
     
     export class MapView {
         private markerLookup: D3.Map = d3.map();
-        private currentlyHighlightedMarker: L.Marker = null;
+        private currentHighlightedMarker: L.Marker = null;
+        private currentDestinationMarker: L.Marker = null;
         
         private mapObject: L.Map;
         private model: Model;
@@ -65,9 +66,14 @@ module CommutesAndRent {
             this.mapObject = MapView.makeMapObject();
 
             this.model = model;
-            this.model.highlightListeners.push(name => this.highlightMarker(name));
 
-            Q($.getJSON(MapConstants.locationDataPath)).then(data => this.addMarkers(data));
+            Q($.getJSON(MapConstants.locationDataPath))
+                .then(data => {
+                    this.addMarkers(data);
+                    this.highlightDestination(this.model.destination);
+                    this.model.highlightListeners.push(name => this.highlightMarker(name));
+                    this.model.destinationListeners.push(name => this.highlightDestination(name));
+                });
         }
 
         private static makeMapObject(): L.Map {
@@ -93,14 +99,27 @@ module CommutesAndRent {
         }
 
         private highlightMarker(name: string): void {
-            if (this.currentlyHighlightedMarker !== null) {
-                this.currentlyHighlightedMarker.setIcon(MapConstants.defaultIcon);
+            if (this.currentHighlightedMarker === this.currentDestinationMarker) {
+                this.currentHighlightedMarker.setIcon(MapConstants.destinationIcon);
+            } else if (this.currentHighlightedMarker !== null) {
+                this.currentHighlightedMarker.setIcon(MapConstants.defaultIcon);
             }
 
             var marker = this.markerLookup.get(name);
             marker.setIcon(MapConstants.highlightIcon);
 
-            this.currentlyHighlightedMarker = marker;
+            this.currentHighlightedMarker = marker;
+        }
+
+        private highlightDestination(name: string): void {
+            if (this.currentDestinationMarker !== null) {
+                this.currentDestinationMarker.setIcon(MapConstants.defaultIcon);
+            }
+            console.log("hi");
+            var marker = this.markerLookup.get(name);
+            marker.setIcon(MapConstants.destinationIcon);
+
+            this.currentDestinationMarker = marker;
         }
     }
 
@@ -129,6 +148,7 @@ module CommutesAndRent {
         
         public static defaultIcon: L.Icon = L.icon({ iconUrl: "default-icon.png" });
         public static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png" });
+        public static destinationIcon: L.Icon = L.icon({ iconUrl: "destination-icon.png" });
         
         public static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
     }
@@ -211,7 +231,7 @@ module CommutesAndRent {
             model.arrivalTime = ControllerConstants.defaultArrivalTime;
             model.destination = ControllerConstants.defaultDestination;
             model.bedroomCount = ControllerConstants.defaultNumberOfBedrooms;
-            
+
             return Q.all([
                 this.loadRentData(model),
                 this.loadCommuteData(model)
@@ -253,15 +273,15 @@ module CommutesAndRent {
         private graphics: Graphics;
 
         private currentlyExpanded: number;
-        private currentlyHighlighted: string;
 
         constructor(model: Model) {
             this.model = model;
 
+            this.initialize();
+
             model.dataUpdateListeners.push(() => this.update());
             model.highlightListeners.push(name => this.highlightStation(name));
-
-            this.initialize();
+            model.destinationListeners.push(name => this.highlightDestination(name));
         }
 
         private initialize(): void {
@@ -295,7 +315,8 @@ module CommutesAndRent {
             selection.select(".label").attr(this.graphics.labelAttrs());
 
             this.expandOrCollapseTime(null);
-            this.highlightStation(this.currentlyHighlighted);
+            this.highlightStation(this.model.highlighted);
+            this.highlightDestination(this.model.destination);
         }
 
         private expandOrCollapseTime(time: number): void {
@@ -328,13 +349,19 @@ module CommutesAndRent {
         }
 
         public highlightStation(name: string) {
-            this.currentlyHighlighted = name;
-
             var selection = d3.selectAll(".bargroup")
-                .classed("highlighted", d => d.name === this.currentlyHighlighted);
+                .classed("highlighted", d => d.name === name);
 
             // Bring selected node to the front:
             selection.sort((a: RentTime, b: RentTime) => a.name === name? 1 : (b.name === name? -1 : 0)); 
+        }
+
+        public highlightDestination(name: string) {
+            var selection = d3.selectAll(".bargroup")
+                .classed("destination", d => d.name === name);
+
+            // Bring selected node to the front:
+            selection.sort((a: RentTime, b: RentTime) => a.name === name ? 1 : (b.name === name ? -1 : 0)); 
         }
     }
 

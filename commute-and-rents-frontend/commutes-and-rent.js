@@ -64,16 +64,21 @@ var CommutesAndRent;
         function MapView(model) {
             var _this = this;
             this.markerLookup = d3.map();
-            this.currentlyHighlightedMarker = null;
+            this.currentHighlightedMarker = null;
+            this.currentDestinationMarker = null;
             this.mapObject = MapView.makeMapObject();
 
             this.model = model;
-            this.model.highlightListeners.push(function (name) {
-                return _this.highlightMarker(name);
-            });
 
             Q($.getJSON(MapConstants.locationDataPath)).then(function (data) {
-                return _this.addMarkers(data);
+                _this.addMarkers(data);
+                _this.highlightDestination(_this.model.destination);
+                _this.model.highlightListeners.push(function (name) {
+                    return _this.highlightMarker(name);
+                });
+                _this.model.destinationListeners.push(function (name) {
+                    return _this.highlightDestination(name);
+                });
             });
         }
         MapView.makeMapObject = function () {
@@ -100,14 +105,27 @@ var CommutesAndRent;
         };
 
         MapView.prototype.highlightMarker = function (name) {
-            if (this.currentlyHighlightedMarker !== null) {
-                this.currentlyHighlightedMarker.setIcon(MapConstants.defaultIcon);
+            if (this.currentHighlightedMarker === this.currentDestinationMarker) {
+                this.currentHighlightedMarker.setIcon(MapConstants.destinationIcon);
+            } else if (this.currentHighlightedMarker !== null) {
+                this.currentHighlightedMarker.setIcon(MapConstants.defaultIcon);
             }
 
             var marker = this.markerLookup.get(name);
             marker.setIcon(MapConstants.highlightIcon);
 
-            this.currentlyHighlightedMarker = marker;
+            this.currentHighlightedMarker = marker;
+        };
+
+        MapView.prototype.highlightDestination = function (name) {
+            if (this.currentDestinationMarker !== null) {
+                this.currentDestinationMarker.setIcon(MapConstants.defaultIcon);
+            }
+            console.log("hi");
+            var marker = this.markerLookup.get(name);
+            marker.setIcon(MapConstants.destinationIcon);
+
+            this.currentDestinationMarker = marker;
         };
         return MapView;
     })();
@@ -134,6 +152,7 @@ var CommutesAndRent;
 
         MapConstants.defaultIcon = L.icon({ iconUrl: "default-icon.png" });
         MapConstants.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png" });
+        MapConstants.destinationIcon = L.icon({ iconUrl: "destination-icon.png" });
 
         MapConstants.locationDataPath = "preprocessor-output/processed-locations/locations.json";
         return MapConstants;
@@ -318,14 +337,17 @@ var CommutesAndRent;
             var _this = this;
             this.model = model;
 
+            this.initialize();
+
             model.dataUpdateListeners.push(function () {
                 return _this.update();
             });
             model.highlightListeners.push(function (name) {
                 return _this.highlightStation(name);
             });
-
-            this.initialize();
+            model.destinationListeners.push(function (name) {
+                return _this.highlightDestination(name);
+            });
         }
         ChartView.prototype.initialize = function () {
             var _this = this;
@@ -362,7 +384,8 @@ var CommutesAndRent;
             selection.select(".label").attr(this.graphics.labelAttrs());
 
             this.expandOrCollapseTime(null);
-            this.highlightStation(this.currentlyHighlighted);
+            this.highlightStation(this.model.highlighted);
+            this.highlightDestination(this.model.destination);
         };
 
         ChartView.prototype.expandOrCollapseTime = function (time) {
@@ -404,11 +427,19 @@ var CommutesAndRent;
         };
 
         ChartView.prototype.highlightStation = function (name) {
-            var _this = this;
-            this.currentlyHighlighted = name;
-
             var selection = d3.selectAll(".bargroup").classed("highlighted", function (d) {
-                return d.name === _this.currentlyHighlighted;
+                return d.name === name;
+            });
+
+            // Bring selected node to the front:
+            selection.sort(function (a, b) {
+                return a.name === name ? 1 : (b.name === name ? -1 : 0);
+            });
+        };
+
+        ChartView.prototype.highlightDestination = function (name) {
+            var selection = d3.selectAll(".bargroup").classed("destination", function (d) {
+                return d.name === name;
             });
 
             // Bring selected node to the front:

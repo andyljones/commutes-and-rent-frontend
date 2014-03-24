@@ -19,6 +19,7 @@
   <ItemGroup>
     <Content Include="commutes-and-rent.css" />
     <Content Include="default-icon.png" />
+    <Content Include="destination-icon.png" />
     <Content Include="highlighted-icon.png" />
     <Content Include="index.html" />
     <Content Include="library\d3.slider\d3.slider.css" />
