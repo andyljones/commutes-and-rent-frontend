@@ -64,7 +64,7 @@ var CommutesAndRent;
         function MapView(model) {
             var _this = this;
             this.markerLookup = d3.map();
-            this.currentHighlightedMarker = null;
+            this.currentHighlightedMarkers = [];
             this.currentDestinationMarker = null;
             this.mapObject = MapView.makeMapObject();
 
@@ -72,12 +72,12 @@ var CommutesAndRent;
 
             Q($.getJSON(MapConstants.locationDataPath)).then(function (data) {
                 _this.addMarkers(data);
-                _this.highlightDestination(_this.model.destination);
-                _this.model.highlightListeners.push(function (name) {
-                    return _this.highlightMarker(name);
+                _this.highlightDestination();
+                _this.model.highlightListeners.push(function () {
+                    return _this.highlightMarkers();
                 });
-                _this.model.destinationListeners.push(function (name) {
-                    return _this.highlightDestination(name);
+                _this.model.destinationListeners.push(function () {
+                    return _this.highlightDestination();
                 });
             });
         }
@@ -97,31 +97,43 @@ var CommutesAndRent;
                 var marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon }).addTo(this.mapObject).on("click", function (e) {
                     return _this.model.destination = e.target.name;
                 }).on("mouseover", function (e) {
-                    return _this.model.highlighted = e.target.name;
+                    return _this.model.highlighted = [e.target.name];
                 });
 
                 this.markerLookup.set(locations[i].name, marker);
             }
         };
 
-        MapView.prototype.highlightMarker = function (name) {
-            if (this.currentHighlightedMarker === this.currentDestinationMarker) {
-                this.currentHighlightedMarker.setIcon(MapConstants.destinationIcon);
-            } else if (this.currentHighlightedMarker !== null) {
-                this.currentHighlightedMarker.setIcon(MapConstants.defaultIcon);
-            }
+        MapView.prototype.highlightMarkers = function () {
+            var _this = this;
+            var names = this.model.highlighted;
 
-            var marker = this.markerLookup.get(name);
-            marker.setIcon(MapConstants.highlightIcon);
+            this.currentHighlightedMarkers.forEach(function (marker) {
+                if (marker === _this.currentDestinationMarker) {
+                    marker.setIcon(MapConstants.destinationIcon);
+                } else {
+                    marker.setIcon(MapConstants.defaultIcon);
+                }
+            });
 
-            this.currentHighlightedMarker = marker;
+            var markers = names.map(function (name) {
+                return _this.markerLookup.get(name);
+            });
+
+            markers.forEach(function (marker) {
+                marker.setIcon(MapConstants.highlightIcon);
+            });
+
+            this.currentHighlightedMarkers = markers;
         };
 
-        MapView.prototype.highlightDestination = function (name) {
+        MapView.prototype.highlightDestination = function () {
+            var name = this.model.destination;
+
             if (this.currentDestinationMarker !== null) {
                 this.currentDestinationMarker.setIcon(MapConstants.defaultIcon);
             }
-            console.log("hi");
+
             var marker = this.markerLookup.get(name);
             marker.setIcon(MapConstants.destinationIcon);
 
@@ -166,6 +178,7 @@ var CommutesAndRent;
             this.bedroomCountListeners = [];
             this.arrivalTimeListeners = [];
             this.highlightListeners = [];
+            this._highlighted = [];
             this.destinationListeners = [];
             this.dataUpdateListeners = [];
         }
@@ -176,7 +189,7 @@ var CommutesAndRent;
             set: function (value) {
                 this._bedroomCount = value;
                 this.bedroomCountListeners.forEach(function (l) {
-                    return l(value);
+                    return l();
                 });
             },
             enumerable: true,
@@ -190,7 +203,7 @@ var CommutesAndRent;
             set: function (value) {
                 this._arrivalTime = value;
                 this.arrivalTimeListeners.forEach(function (l) {
-                    return l(value);
+                    return l();
                 });
             },
             enumerable: true,
@@ -204,7 +217,7 @@ var CommutesAndRent;
             set: function (value) {
                 this._highlighted = value;
                 this.highlightListeners.forEach(function (l) {
-                    return l(value);
+                    return l();
                 });
             },
             enumerable: true,
@@ -218,7 +231,7 @@ var CommutesAndRent;
             set: function (value) {
                 this._destination = value;
                 this.destinationListeners.forEach(function (l) {
-                    return l(value);
+                    return l();
                 });
             },
             enumerable: true,
@@ -263,9 +276,15 @@ var CommutesAndRent;
         function Controller() {
             var _this = this;
             this.initializeModel().then(function (model) {
+                console.log("controllerup");
                 _this.model = model;
+                console.log("modelup");
                 _this.chart = new CommutesAndRent.ChartView(model);
+
+                console.log("chartup");
                 _this.map = new CommutesAndRent.MapView(model);
+
+                console.log("mapup");
                 _this.sliders = new CommutesAndRent.SlidersController(model);
                 _this.initializeSelf(model);
             });
@@ -303,13 +322,13 @@ var CommutesAndRent;
 
         Controller.prototype.initializeSelf = function (model) {
             var _this = this;
-            model.destinationListeners.push(function (name) {
+            model.destinationListeners.push(function () {
                 return _this.loadCommuteData(model);
             });
-            model.arrivalTimeListeners.push(function (time) {
+            model.arrivalTimeListeners.push(function () {
                 return _this.loadCommuteData(model);
             });
-            model.bedroomCountListeners.push(function (count) {
+            model.bedroomCountListeners.push(function () {
                 return _this.loadRentData(model);
             });
         };
@@ -342,23 +361,23 @@ var CommutesAndRent;
             model.dataUpdateListeners.push(function () {
                 return _this.update();
             });
-            model.highlightListeners.push(function (name) {
-                return _this.highlightStation(name);
+            model.highlightListeners.push(function () {
+                return _this.highlightStations();
             });
-            model.destinationListeners.push(function (name) {
-                return _this.highlightDestination(name);
+            model.destinationListeners.push(function () {
+                return _this.highlightDestination();
             });
         }
         ChartView.prototype.initialize = function () {
             var _this = this;
-            var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
+            this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            var selection = d3.select("#chart").selectAll(".bargroup").data(dataset).enter().append("g");
+            var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
 
             selection.classed("bargroup", true).on('click', function (d) {
                 return _this.expandOrCollapseTime(d.time);
             }).on('mouseover', function (d) {
-                return _this.model.highlighted = d.name;
+                return _this.model.highlighted = _this.getStationsToHighlight(d);
             });
 
             selection.append("rect").classed("background", true);
@@ -366,17 +385,26 @@ var CommutesAndRent;
             selection.append("line").classed("median", true);
             selection.append("text").classed("label", true);
 
-            this.update(dataset);
+            this.update();
         };
 
-        ChartView.prototype.update = function (dataset) {
-            if (typeof dataset === "undefined") {
-                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
+        ChartView.prototype.getStationsToHighlight = function (mouseoveredData) {
+            if (mouseoveredData.time === this.currentlyExpanded) {
+                return [mouseoveredData.name];
+            } else {
+                return this.data.filter(function (e) {
+                    return e.time === mouseoveredData.time;
+                }).map(function (e) {
+                    return e.name;
+                });
             }
+        };
 
-            this.graphics = new Graphics(dataset);
+        ChartView.prototype.update = function () {
+            this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
+            this.graphics = new Graphics(this.data);
 
-            var selection = d3.selectAll(".bargroup").data(dataset, function (rentTime) {
+            var selection = d3.selectAll(".bargroup").data(this.data, function (rentTime) {
                 return rentTime.name;
             });
 
@@ -390,8 +418,8 @@ var CommutesAndRent;
             });
 
             this.expandOrCollapseTime(null);
-            this.highlightStation(this.model.highlighted);
-            this.highlightDestination(this.model.destination);
+            this.highlightStations();
+            this.highlightDestination();
         };
 
         ChartView.prototype.expandOrCollapseTime = function (time) {
@@ -432,18 +460,26 @@ var CommutesAndRent;
             return rentTimes;
         };
 
-        ChartView.prototype.highlightStation = function (name) {
+        ChartView.prototype.highlightStations = function () {
+            var _this = this;
             var selection = d3.selectAll(".bargroup").classed("highlighted", function (d) {
-                return d.name === name;
+                return _this.model.highlighted.some(function (name) {
+                    return name === d.name;
+                });
             });
 
             // Bring selected node to the front:
-            selection.sort(function (a, b) {
-                return a.name === name ? 1 : (b.name === name ? -1 : 0);
-            });
+            if (this.model.highlighted.length === 1) {
+                var name = this.model.highlighted[0];
+                selection.sort(function (a, b) {
+                    return a.name === name ? 1 : (b.name === name ? -1 : 0);
+                });
+            }
         };
 
-        ChartView.prototype.highlightDestination = function (name) {
+        ChartView.prototype.highlightDestination = function () {
+            var name = this.model.destination;
+
             var selection = d3.selectAll(".bargroup").classed("destination", function (d) {
                 return d.name === name;
             });

@@ -56,7 +56,7 @@ module CommutesAndRent {
     
     export class MapView {
         private markerLookup: D3.Map = d3.map();
-        private currentHighlightedMarker: L.Marker = null;
+        private currentHighlightedMarkers: L.Marker[] = [];
         private currentDestinationMarker: L.Marker = null;
         
         private mapObject: L.Map;
@@ -70,9 +70,9 @@ module CommutesAndRent {
             Q($.getJSON(MapConstants.locationDataPath))
                 .then(data => {
                     this.addMarkers(data);
-                    this.highlightDestination(this.model.destination);
-                    this.model.highlightListeners.push(name => this.highlightMarker(name));
-                    this.model.destinationListeners.push(name => this.highlightDestination(name));
+                    this.highlightDestination();
+                    this.model.highlightListeners.push(() => this.highlightMarkers());
+                    this.model.destinationListeners.push(() => this.highlightDestination());
                 });
         }
 
@@ -92,30 +92,39 @@ module CommutesAndRent {
                 var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon })
                     .addTo(this.mapObject)
                     .on("click", (e: L.LeafletMouseEvent) => this.model.destination = e.target.name)
-                    .on("mouseover", (e: L.LeafletMouseEvent) => this.model.highlighted = e.target.name);
+                    .on("mouseover", (e: L.LeafletMouseEvent) => this.model.highlighted = [e.target.name]);
 
                 this.markerLookup.set(locations[i].name, marker);
             }
         }
 
-        private highlightMarker(name: string): void {
-            if (this.currentHighlightedMarker === this.currentDestinationMarker) {
-                this.currentHighlightedMarker.setIcon(MapConstants.destinationIcon);
-            } else if (this.currentHighlightedMarker !== null) {
-                this.currentHighlightedMarker.setIcon(MapConstants.defaultIcon);
-            }
+        private highlightMarkers(): void {
+            var names = this.model.highlighted; 
 
-            var marker = this.markerLookup.get(name);
-            marker.setIcon(MapConstants.highlightIcon);
+            this.currentHighlightedMarkers.forEach(marker => {
+                if (marker === this.currentDestinationMarker) {
+                    marker.setIcon(MapConstants.destinationIcon);
+                } else {
+                    marker.setIcon(MapConstants.defaultIcon);
+                }
+            });
 
-            this.currentHighlightedMarker = marker;
+            var markers = names.map(name => this.markerLookup.get(name));
+
+            markers.forEach(marker => {
+                marker.setIcon(MapConstants.highlightIcon);
+            });
+
+            this.currentHighlightedMarkers = markers;
         }
 
-        private highlightDestination(name: string): void {
+        private highlightDestination(): void {
+            var name = this.model.destination;
+
             if (this.currentDestinationMarker !== null) {
                 this.currentDestinationMarker.setIcon(MapConstants.defaultIcon);
             }
-            console.log("hi");
+
             var marker = this.markerLookup.get(name);
             marker.setIcon(MapConstants.destinationIcon);
 
@@ -157,25 +166,25 @@ module CommutesAndRent {
 module CommutesAndRent {
 
     export class Model {
-        public bedroomCountListeners: { (count: number): void; }[] = [];
+        public bedroomCountListeners: { (): void; }[] = [];
         private _bedroomCount: number;
         public get bedroomCount(): number { return this._bedroomCount; }
-        public set bedroomCount(value: number) { this._bedroomCount = value; this.bedroomCountListeners.forEach(l => l(value)); }
+        public set bedroomCount(value: number) { this._bedroomCount = value; this.bedroomCountListeners.forEach(l => l()); }
 
-        public arrivalTimeListeners: { (count: number): void; }[] = [];
+        public arrivalTimeListeners: { (): void; }[] = [];
         private _arrivalTime: number;
         public get arrivalTime(): number { return this._arrivalTime; }
-        public set arrivalTime(value: number) { this._arrivalTime = value; this.arrivalTimeListeners.forEach(l => l(value)); }
+        public set arrivalTime(value: number) { this._arrivalTime = value; this.arrivalTimeListeners.forEach(l => l()); }
 
-        public highlightListeners: { (name: string): void; }[] = [];
-        private _highlighted: string;
-        public get highlighted(): string { return this._highlighted; }
-        public set highlighted(value: string) { this._highlighted = value; this.highlightListeners.forEach(l => l(value)); }
+        public highlightListeners: { (): void; }[] = [];
+        private _highlighted: string[] = [];
+        public get highlighted(): string[] { return this._highlighted; }
+        public set highlighted(value: string[]) { this._highlighted = value; this.highlightListeners.forEach(l => l()); }
 
-        public destinationListeners: { (name: string): void; }[] = [];
+        public destinationListeners: { (): void; }[] = [];
         private _destination: string;
         public get destination(): string { return this._destination; }
-        public set destination(value: string) { this._destination = value; this.destinationListeners.forEach(l => l(value)); }
+        public set destination(value: string) { this._destination = value; this.destinationListeners.forEach(l => l()); }
 
         public dataUpdateListeners: { (): void; }[] = [];
         private _rents: RentStatistic[];
@@ -215,11 +224,19 @@ module CommutesAndRent {
         private sliders: SlidersController;
 
         constructor() { 
+
             this.initializeModel()
                 .then(model => {
+
+                    console.log("controllerup");
                     this.model = model;
+                    console.log("modelup");
                     this.chart = new ChartView(model);
+
+                    console.log("chartup");
                     this.map = new MapView(model);
+
+                    console.log("mapup");
                     this.sliders = new SlidersController(model);
                     this.initializeSelf(model);
                 });
@@ -249,9 +266,9 @@ module CommutesAndRent {
         }
 
         private initializeSelf(model: Model): void {
-            model.destinationListeners.push(name => this.loadCommuteData(model));
-            model.arrivalTimeListeners.push(time => this.loadCommuteData(model));
-            model.bedroomCountListeners.push(count => this.loadRentData(model));
+            model.destinationListeners.push(() => this.loadCommuteData(model));
+            model.arrivalTimeListeners.push(() => this.loadCommuteData(model));
+            model.bedroomCountListeners.push(() => this.loadRentData(model));
         }
     }
 
@@ -269,6 +286,7 @@ module CommutesAndRent {
 
     export class ChartView {
         private model: Model;
+        private data: RentTime[];
 
         private graphics: Graphics;
 
@@ -280,36 +298,41 @@ module CommutesAndRent {
             this.initialize();
 
             model.dataUpdateListeners.push(() => this.update());
-            model.highlightListeners.push(name => this.highlightStation(name));
-            model.destinationListeners.push(name => this.highlightDestination(name));
+            model.highlightListeners.push(() => this.highlightStations());
+            model.destinationListeners.push(() => this.highlightDestination());
         }
 
         private initialize(): void {
-            var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes);
+            this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            var selection = d3.select("#chart").selectAll(".bargroup").data(dataset).enter().append("g");
+            var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
 
             selection
                 .classed("bargroup", true)
                 .on('click', d => this.expandOrCollapseTime(d.time))
-                .on('mouseover', d => this.model.highlighted = d.name);
+                .on('mouseover', d => this.model.highlighted = this.getStationsToHighlight(d));
 
             selection.append("rect").classed("background", true);
             selection.append("rect").classed("rect", true);
             selection.append("line").classed("median", true);
             selection.append("text").classed("label", true);
 
-            this.update(dataset);
+            this.update();
         }
 
-        private update(dataset?: RentTime[]): void {
-            if (typeof dataset === "undefined") {
-                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
+        private getStationsToHighlight(mouseoveredData: RentTime) {
+            if (mouseoveredData.time === this.currentlyExpanded) {
+                return [mouseoveredData.name];
+            } else {
+                return this.data.filter(e => e.time === mouseoveredData.time).map(e => e.name);
             }
+        } 
 
-            this.graphics = new Graphics(dataset);
+        private update(): void {
+            this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
+            this.graphics = new Graphics(this.data);
 
-            var selection = d3.selectAll(".bargroup").data(dataset, rentTime => rentTime.name);
+            var selection = d3.selectAll(".bargroup").data(this.data, rentTime => rentTime.name);
 
             selection.select(".rect").attr(this.graphics.rectAttrs());
             selection.select(".median").attr(this.graphics.medianAttrs());
@@ -319,8 +342,8 @@ module CommutesAndRent {
             selection.classed("nulldata", d => d.median === null);
 
             this.expandOrCollapseTime(null);
-            this.highlightStation(this.model.highlighted);
-            this.highlightDestination(this.model.destination);
+            this.highlightStations();
+            this.highlightDestination();
         }
 
         private expandOrCollapseTime(time: number): void {
@@ -352,15 +375,20 @@ module CommutesAndRent {
             return rentTimes;
         }
 
-        public highlightStation(name: string) {
+        public highlightStations() {
             var selection = d3.selectAll(".bargroup")
-                .classed("highlighted", d => d.name === name);
+                .classed("highlighted", d => this.model.highlighted.some(name => name === d.name));
 
             // Bring selected node to the front:
-            selection.sort((a: RentTime, b: RentTime) => a.name === name? 1 : (b.name === name? -1 : 0)); 
+            if (this.model.highlighted.length === 1) {
+                var name = this.model.highlighted[0];
+                selection.sort((a: RentTime, b: RentTime) => a.name === name ? 1 : (b.name === name ? -1 : 0));
+            } 
         }
 
-        public highlightDestination(name: string) {
+        public highlightDestination() {
+            var name = this.model.destination;
+
             var selection = d3.selectAll(".bargroup")
                 .classed("destination", d => d.name === name);
 

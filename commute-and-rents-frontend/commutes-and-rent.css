@@ -46,6 +46,8 @@ html, body, #app {
 .bargroup .rect, .bargroup .median {
     fill: navy;
     opacity: 0.4;
+    stroke: black;
+    stroke-width: 1;
 }
 
 /* Transition classes */
@@ -62,7 +64,6 @@ html, body, #app {
 
 .bargroup.highlighted .rect, .bargroup.highlighted .label {
     fill: darkorange;
-    opacity: 1;
 }
 
 .bargroup.expanded .rect, .bargroup.expanded .label, .bargroup.expanded .median {
