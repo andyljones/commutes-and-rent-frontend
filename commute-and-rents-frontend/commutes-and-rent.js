@@ -534,7 +534,7 @@ var CommutesAndRent;
         //TODO: This is awful.
         Graphics.prototype.calculateYOffsets = function (dataset) {
             var sorted = dataset.sort(function (a, b) {
-                return a.median - b.median;
+                return a.median === null ? 1 : (b.median === null ? -1 : a.median - b.median);
             });
 
             for (var i = 0; i < dataset.length; i++) {

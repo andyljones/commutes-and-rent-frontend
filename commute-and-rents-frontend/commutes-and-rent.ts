@@ -448,7 +448,7 @@ module CommutesAndRent {
 
         //TODO: This is awful.
         private calculateYOffsets(dataset: RentTime[]): void {
-            var sorted = dataset.sort((a, b) => a.median - b.median);
+            var sorted = dataset.sort((a, b) => a.median === null? 1 : (b.median === null? -1 : a.median - b.median));
 
             for (var i: number = 0; i < dataset.length; i++) {
 
