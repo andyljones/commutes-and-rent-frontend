@@ -225,7 +225,7 @@ module CommutesAndRent {
 
         private initialize(): void {
             this.view = new ChartView(this.model);
-            d3.selectAll(".bar.g").on("mouseover", d => { this.notifyAndHighlight(d.name); });
+            d3.selectAll(".bargroup").on("mouseover", d => { this.notifyAndHighlight(d.name); });
         }
 
         public updateBedroomCount(bedroomCount: number) {
@@ -274,74 +274,64 @@ module CommutesAndRent {
 
         private initialize(): void {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
-            this.graphics = new Graphics(dataset);
 
-            var selection = this.svg.selectAll(".bar.g").data(dataset).enter()
-                .append("g")
-                .on('click', d => this.expandTime(d.time))
-                .attr(this.graphics.groupPositionAttrs(null))
-                .classed("bar", true)
-                .classed("g", true)
-                .classed("highlighted", d => d.name === this.currentlyHighlighted);
+            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g")
+                .classed("bargroup", true);
 
-            selection
-                .append("rect")
-                .classed("bar", true)
-                .classed("background", true)
-                .attr(this.graphics.backgroundAttrs(null));
+            selection.append("rect")
+                .classed("background", true);
 
-            selection
-                .append("rect")
-                .classed("bar", true)
-                .classed("rect", true)
-                .attr(this.graphics.rectAttrs());
+            selection.append("rect")
+                .classed("rect", true);
 
-            selection
-                .append("text")
-                .classed("bar", true)
-                .classed("label", true)
-                .attr(this.graphics.labelAttrs())
-                .text(this.graphics.labelText(null));
+            selection.append("text")
+                .classed("label", true);
+
+            this.update(dataset);
         }
 
-        private update(): void {
-            var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+        private update(dataset?: RentTime[]): void {
+            if (typeof dataset === "undefined") {
+                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            }
+
             this.graphics = new Graphics(dataset);
 
-            var selection = d3.selectAll(".bar.g").data(dataset, rentTime => rentTime.name);
+            var selection = d3.selectAll(".bargroup").data(dataset, rentTime => rentTime.name);
 
             selection
-                .on('click', d => this.expandTime(d.time))
+                .on('click', d => this.expandOrCollapseTime(d.time))
                 .attr(this.graphics.groupPositionAttrs(null))
                 .classed("highlighted", d => d.name === this.currentlyHighlighted);
 
-            selection.select(".bar.rect")
+            selection.select(".rect")
                 .attr(this.graphics.rectAttrs());
 
-            selection.select(".bar.background")
+            selection.select(".background")
                 .attr(this.graphics.backgroundAttrs(null));
 
-            selection.select(".bar.label")
+            selection.select(".label")
                 .attr(this.graphics.labelAttrs())
                 .text(this.graphics.labelText(null));
 
             this.currentlyExpanded = null;
         }
 
-        private expandTime(time: number): void {
-            var selection = this.svg.selectAll(".bar.g");
-
+        private expandOrCollapseTime(time: number): void {
             if (time === this.currentlyExpanded) {
-                selection.attr(this.graphics.groupPositionAttrs(null));
-                selection.select(".bar.background").attr(this.graphics.backgroundAttrs(null));
-                selection.select(".bar.label").text(this.graphics.labelText(null));
-                this.currentlyExpanded = null;
+                this.expandTime(null);
             } else {
-                selection.attr(this.graphics.groupPositionAttrs(time));
-                selection.select(".bar.background").attr(this.graphics.backgroundAttrs(time));
-                selection.select(".bar.label").text(this.graphics.labelText(time));
-                this.currentlyExpanded = time;
+                this.expandTime(time);
             }
+        }
+
+        private expandTime(time: number): void {
+            var selection = this.svg.selectAll(".bargroup");
+
+            selection.attr(this.graphics.groupPositionAttrs(time));
+            selection.select(".background").attr(this.graphics.backgroundAttrs(time));
+            selection.select(".label").text(this.graphics.labelText(time));
+            this.currentlyExpanded = time;
         }
 
         private static generateDataset(rents: RentStatistic[], departures: DepartureTime[]) {
@@ -354,11 +344,11 @@ module CommutesAndRent {
         public highlightStation(name: string) {
             this.currentlyHighlighted = name;
 
-            var selection = d3.selectAll(".bar.g")
+            var selection = d3.selectAll(".bargroup")
                 .classed("highlighted", d => d.name === this.currentlyHighlighted);
 
             // Bring selected node to the front:
-            selection.sort((a: RentTime, b) => a.name === name ? 1 : 0); 
+            selection.sort((a: RentTime, b: RentTime) => a.name === name? 1 : (b.name === name? -1 : 0)); 
         }
     }
 
@@ -412,7 +402,7 @@ module CommutesAndRent {
 
             AxisBuilders.makeXAxis(this.xScale);
             AxisBuilders.makeYAxis(this.yScale);
-
+            
             this.calculatePositions(dataset);
 
             Graphics.setChartHeight(dataset);
@@ -530,7 +520,6 @@ module CommutesAndRent {
 
             d3.select(".x.axis")
                 .attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")")
-                .transition()
                 .call(axis);
         }
 
@@ -539,7 +528,6 @@ module CommutesAndRent {
 
             d3.select(".y.axis")
                 .attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)")
-                .transition()
                 .call(axis);
         }
     }

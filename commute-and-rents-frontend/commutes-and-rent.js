@@ -213,7 +213,7 @@ var CommutesAndRent;
         ChartController.prototype.initialize = function () {
             var _this = this;
             this.view = new CommutesAndRent.ChartView(this.model);
-            d3.selectAll(".bar.g").on("mouseover", function (d) {
+            d3.selectAll(".bargroup").on("mouseover", function (d) {
                 _this.notifyAndHighlight(d.name);
             });
         };
@@ -261,61 +261,61 @@ var CommutesAndRent;
             this.initialize();
         }
         ChartView.prototype.initialize = function () {
-            var _this = this;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
-            this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = this.svg.selectAll(".bar.g").data(dataset).enter().append("g").on('click', function (d) {
-                return _this.expandTime(d.time);
-            }).attr(this.graphics.groupPositionAttrs(null)).classed("bar", true).classed("g", true).classed("highlighted", function (d) {
-                return d.name === _this.currentlyHighlighted;
-            });
+            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g").classed("bargroup", true);
 
-            selection.append("rect").classed("bar", true).classed("background", true).attr(this.graphics.backgroundAttrs(null));
+            selection.append("rect").classed("background", true);
 
-            selection.append("rect").classed("bar", true).classed("rect", true).attr(this.graphics.rectAttrs());
+            selection.append("rect").classed("rect", true);
 
-            selection.append("text").classed("bar", true).classed("label", true).attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
+            selection.append("text").classed("label", true);
+
+            this.update(dataset);
         };
 
-        ChartView.prototype.update = function () {
+        ChartView.prototype.update = function (dataset) {
             var _this = this;
-            var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            if (typeof dataset === "undefined") {
+                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            }
+
             this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = d3.selectAll(".bar.g").data(dataset, function (rentTime) {
+            var selection = d3.selectAll(".bargroup").data(dataset, function (rentTime) {
                 return rentTime.name;
             });
 
             selection.on('click', function (d) {
-                return _this.expandTime(d.time);
+                return _this.expandOrCollapseTime(d.time);
             }).attr(this.graphics.groupPositionAttrs(null)).classed("highlighted", function (d) {
                 return d.name === _this.currentlyHighlighted;
             });
 
-            selection.select(".bar.rect").attr(this.graphics.rectAttrs());
+            selection.select(".rect").attr(this.graphics.rectAttrs());
 
-            selection.select(".bar.background").attr(this.graphics.backgroundAttrs(null));
+            selection.select(".background").attr(this.graphics.backgroundAttrs(null));
 
-            selection.select(".bar.label").attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
+            selection.select(".label").attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
 
             this.currentlyExpanded = null;
         };
 
-        ChartView.prototype.expandTime = function (time) {
-            var selection = this.svg.selectAll(".bar.g");
-
+        ChartView.prototype.expandOrCollapseTime = function (time) {
             if (time === this.currentlyExpanded) {
-                selection.attr(this.graphics.groupPositionAttrs(null));
-                selection.select(".bar.background").attr(this.graphics.backgroundAttrs(null));
-                selection.select(".bar.label").text(this.graphics.labelText(null));
-                this.currentlyExpanded = null;
+                this.expandTime(null);
             } else {
-                selection.attr(this.graphics.groupPositionAttrs(time));
-                selection.select(".bar.background").attr(this.graphics.backgroundAttrs(time));
-                selection.select(".bar.label").text(this.graphics.labelText(time));
-                this.currentlyExpanded = time;
+                this.expandTime(time);
             }
+        };
+
+        ChartView.prototype.expandTime = function (time) {
+            var selection = this.svg.selectAll(".bargroup");
+
+            selection.attr(this.graphics.groupPositionAttrs(time));
+            selection.select(".background").attr(this.graphics.backgroundAttrs(time));
+            selection.select(".label").text(this.graphics.labelText(time));
+            this.currentlyExpanded = time;
         };
 
         ChartView.generateDataset = function (rents, departures) {
@@ -334,13 +334,13 @@ var CommutesAndRent;
             var _this = this;
             this.currentlyHighlighted = name;
 
-            var selection = d3.selectAll(".bar.g").classed("highlighted", function (d) {
+            var selection = d3.selectAll(".bargroup").classed("highlighted", function (d) {
                 return d.name === _this.currentlyHighlighted;
             });
 
             // Bring selected node to the front:
             selection.sort(function (a, b) {
-                return a.name === name ? 1 : 0;
+                return a.name === name ? 1 : (b.name === name ? -1 : 0);
             });
         };
         return ChartView;
@@ -529,13 +529,13 @@ var CommutesAndRent;
         AxisBuilders.makeXAxis = function (xScale) {
             var axis = d3.svg.axis().scale(xScale).orient("top");
 
-            d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").transition().call(axis);
+            d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").call(axis);
         };
 
         AxisBuilders.makeYAxis = function (yScale) {
             var axis = d3.svg.axis().scale(yScale).orient("left");
 
-            d3.select(".y.axis").attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)").transition().call(axis);
+            d3.select(".y.axis").attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)").call(axis);
         };
         return AxisBuilders;
     })();

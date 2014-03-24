@@ -38,17 +38,17 @@ html, body, #app {
     width: 50%;
 }
 
-.bar.background {
+.bargroup .background {
     fill: gainsboro;
     stroke-width: 0;
 }
 
-.bar.rect {
+.bargroup .rect {
     fill: navy;
     opacity: 0.4;
 }
 
-.highlighted .rect, .highlighted .label {
+.bargroup.highlighted .rect, .bargroup.highlighted .label {
     fill: darkorange;
     opacity: 1;
 }
