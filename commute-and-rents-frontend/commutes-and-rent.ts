@@ -300,9 +300,7 @@ module CommutesAndRent {
             var selection = d3.selectAll(".bargroup").data(dataset, rentTime => rentTime.name);
 
             selection
-                .on('click', d => this.expandOrCollapseTime(d.time))
-                .attr(this.graphics.groupPositionAttrs(null))
-                .classed("highlighted", d => d.name === this.currentlyHighlighted);
+                .on('click', d => this.expandOrCollapseTime(d.time));
 
             selection.select(".rect")
                 .attr(this.graphics.rectAttrs());
@@ -311,10 +309,10 @@ module CommutesAndRent {
                 .attr(this.graphics.backgroundAttrs());
 
             selection.select(".label")
-                .attr(this.graphics.labelAttrs())
-                .text(this.graphics.labelText(null));
+                .attr(this.graphics.labelAttrs());
 
-            this.currentlyExpanded = null;
+            this.expandOrCollapseTime(null);
+            this.highlightStation(this.currentlyHighlighted);
         }
 
         private expandOrCollapseTime(time: number): void {

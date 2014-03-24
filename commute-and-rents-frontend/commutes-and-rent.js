@@ -288,17 +288,16 @@ var CommutesAndRent;
 
             selection.on('click', function (d) {
                 return _this.expandOrCollapseTime(d.time);
-            }).attr(this.graphics.groupPositionAttrs(null)).classed("highlighted", function (d) {
-                return d.name === _this.currentlyHighlighted;
             });
 
             selection.select(".rect").attr(this.graphics.rectAttrs());
 
             selection.select(".background").attr(this.graphics.backgroundAttrs());
 
-            selection.select(".label").attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
+            selection.select(".label").attr(this.graphics.labelAttrs());
 
-            this.currentlyExpanded = null;
+            this.expandOrCollapseTime(null);
+            this.highlightStation(this.currentlyHighlighted);
         };
 
         ChartView.prototype.expandOrCollapseTime = function (time) {
