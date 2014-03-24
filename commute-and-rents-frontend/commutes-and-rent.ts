@@ -1,29 +1,21 @@
 ﻿window.onload = () => {
-    var map: CommutesAndRent.Map = new CommutesAndRent.Map();
     var controller: CommutesAndRent.Controller = new CommutesAndRent.Controller();
-
-    var sliders: CommutesAndRent.Sliders = new CommutesAndRent.Sliders();
-    sliders.updateTimeSubscriber = time => controller.updateArrivalTime(time);
-    sliders.updateBedroomSubscriber = count => controller.updateBedroomCount(count);
-
-    map.clickListener = (name: string) => controller.updateDestination(name);
-    map.mouseoverListener = (name: string) => controller.highlight(name);
-
-    controller.mouseoverListener = (name: string) => map.highlightMarker(name);
 };
 
 declare function d3slider(): any;
 
 module CommutesAndRent {
         
-    export class Sliders {
-        public updateTimeSubscriber: (number) => void = () => { };
-        public updateBedroomSubscriber: (number) => void = () => { };
+    export class SlidersController {
 
         private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
 
+        private model: Model;
+
         //TODO: Defaults are currently in the controller.
-        constructor() {
+        constructor(model: Model) {
+            this.model = model;
+
             this.makeTimeSlider();
             this.makeBedroomCountSlider();
         }
@@ -32,7 +24,7 @@ module CommutesAndRent {
             var slider: any = d3slider()
                 .axis(true)
                 .min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime)
-                .on("slide", (event, value) => this.updateTimeSubscriber(SliderConstants.hoursToMinutes(value)));
+                .on("slide", (event, value) => this.model.arrivalTime = SliderConstants.hoursToMinutes(value));
 
             d3.select("#timeslider").call(slider);
         }
@@ -41,7 +33,7 @@ module CommutesAndRent {
             var slider: any = d3slider()
                 .axis(true)
                 .min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom)
-                .on("slide", (event, value) => this.updateBedroomSubscriber(value));
+                .on("slide", (event, value) => this.model.bedroomCount = value);
 
             d3.select("#bedroomslider").call(slider);
         }
@@ -62,85 +54,63 @@ module CommutesAndRent {
 
 module CommutesAndRent {
     
-    export class Map {
-
-        public clickListener: (name: string) => void = () => { };
-        public mouseoverListener: (name: string) => void = () => { };
-
+    export class MapView {
         private markerLookup: D3.Map = d3.map();
         private currentlyHighlightedMarker: L.Marker = null;
         
         private mapObject: L.Map;
+        private model: Model;
 
-        private static mapTileURLTemplate: string = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
-        private static mapId: string = "coffeetable.hinlda0l";
+        constructor(model: Model) {
+            this.mapObject = MapView.makeMapObject();
 
-        private static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
-        private static defaultZoom: number = 13;
+            this.model = model;
+            this.model.highlightListeners.push(name => this.highlightMarker(name));
 
-        private static defaultIcon: L.Icon = L.icon({iconUrl: "default-icon.png"});
-        private static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png" });
-
-        private static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
-
-        constructor() {
-
-            this.mapObject = Map.buildMap();
-
-            Q($.getJSON(Map.locationDataPath)).then(data => this.addMarkers(data));
+            Q($.getJSON(MapConstants.locationDataPath)).then(data => this.addMarkers(data));
         }
 
-        private static buildMap(): L.Map {
+        private static makeMapObject(): L.Map {
+            var map: L.Map = L.map("map").setView(MapConstants.defaultCenter, MapConstants.defaultZoom);
 
-            var map: L.Map = L.map("map").setView(Map.defaultCenter, Map.defaultZoom);
-
-            new L.TileLayer(Map.mapTileURLTemplate, { mapid: Map.mapId }).addTo(map);
+            new L.TileLayer(MapConstants.mapTileURLTemplate, { mapid: MapConstants.mapId }).addTo(map);
 
             return map;
         }
 
-        private addMarkers(locations: Location[]): void
-        {
+        private addMarkers(locations: Location[]): void {
             for (var i: number = 0; i < locations.length; i++)
             {
                 var latLng: L.LatLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: Map.defaultIcon })
+                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon })
                     .addTo(this.mapObject)
-                    .on("click", (e: L.LeafletMouseEvent) => this.clickListener(e.target.name))
-                    .on("mouseover", (e: L.LeafletMouseEvent) => this.notifyAndHighlight(e.target.name));
+                    .on("click", (e: L.LeafletMouseEvent) => this.model.destination = e.target.name)
+                    .on("mouseover", (e: L.LeafletMouseEvent) => this.model.highlighted = e.target.name);
 
                 this.markerLookup.set(locations[i].name, marker);
             }
         }
 
-        private notifyAndHighlight(name: string): void {
-            this.mouseoverListener(name);
-            this.highlightMarker(name);
-        }
-
-        public highlightMarker(name: string): void {
-
+        private highlightMarker(name: string): void {
             if (this.currentlyHighlightedMarker !== null) {
-                this.currentlyHighlightedMarker.setIcon(Map.defaultIcon);
+                this.currentlyHighlightedMarker.setIcon(MapConstants.defaultIcon);
             }
 
             var marker = this.markerLookup.get(name);
-            marker.setIcon(Map.highlightIcon);
+            marker.setIcon(MapConstants.highlightIcon);
 
             this.currentlyHighlightedMarker = marker;
         }
     }
 
     interface Location {
-
         name: string;
         longitude: number;
         latitude: number;        
     }
 
-    export class StationMarker extends L.Marker {
-
+    class StationMarker extends L.Marker {
         public name: string;
 
         constructor(name: string, latLng: L.LatLng, options?: any) {
@@ -149,17 +119,48 @@ module CommutesAndRent {
             this.name = name;
         }
     }
+
+    class MapConstants {
+        public static mapTileURLTemplate: string = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
+        public static mapId: string = "coffeetable.hinlda0l";
+        
+        public static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
+        public static defaultZoom: number = 13;
+        
+        public static defaultIcon: L.Icon = L.icon({ iconUrl: "default-icon.png" });
+        public static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png" });
+        
+        public static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
+    }
 }
 
-module CommutesAndRent
-{
-    export class Model {
-        public dataUpdateListeners: { (): void; }[] = [];
+module CommutesAndRent {
 
+    export class Model {
+        public bedroomCountListeners: { (count: number): void; }[] = [];
+        private _bedroomCount: number;
+        public get bedroomCount(): number { return this._bedroomCount; }
+        public set bedroomCount(value: number) { this._bedroomCount = value; this.bedroomCountListeners.forEach(l => l(value)); }
+
+        public arrivalTimeListeners: { (count: number): void; }[] = [];
+        private _arrivalTime: number;
+        public get arrivalTime(): number { return this._arrivalTime; }
+        public set arrivalTime(value: number) { this._arrivalTime = value; this.arrivalTimeListeners.forEach(l => l(value)); }
+
+        public highlightListeners: { (name: string): void; }[] = [];
+        private _highlighted: string;
+        public get highlighted(): string { return this._highlighted; }
+        public set highlighted(value: string) { this._highlighted = value; this.highlightListeners.forEach(l => l(value)); }
+
+        public destinationListeners: { (name: string): void; }[] = [];
+        private _destination: string;
+        public get destination(): string { return this._destination; }
+        public set destination(value: string) { this._destination = value; this.destinationListeners.forEach(l => l(value)); }
+
+        public dataUpdateListeners: { (): void; }[] = [];
         private _rents: RentStatistic[];
         public get rents(): RentStatistic[] { return this._rents; } 
         public set rents(value: RentStatistic[]) { this._rents = value; this.dataUpdateListeners.forEach(l => l()); }
-
         private _commutes: CommuteTimes;
         public get commutes(): CommuteTimes { return this._commutes; }
         public set commutes(value: CommuteTimes) { this._commutes = value; this.dataUpdateListeners.forEach(l => l()); }
@@ -188,10 +189,10 @@ module CommutesAndRent {
 
     export class Controller
     {
-        public mouseoverListener: (name: string) => void = () => { };
-
         private model: Model;
-        private view: ChartView;
+        private chart: ChartView;
+        private map: MapView;
+        private sliders: SlidersController;
 
         private static defaultArrivalTime: number = 480;
         private static defaultDestination: string = "Barbican";
@@ -201,55 +202,41 @@ module CommutesAndRent {
         private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
 
         constructor() { 
-            this.initializeModel().then(() => this.initializeView());
+            this.initializeModel()
+                .then(model => {
+                    this.model = model;
+                    this.chart = new ChartView(model);
+                    this.map = new MapView(model);
+                    this.sliders = new SlidersController(model);
+                    this.initializeSelf(model);
+                });
         }
 
-        private initializeModel(): Q.Promise<void[]> {
-            this.model = new Model();
+        private initializeModel(): Q.Promise<Model> {
+            var model = new Model();
 
             return Q.all([
-                this.loadRentData(Controller.defaultNumberOfBedrooms),
-                this.loadCommuteData(Controller.defaultArrivalTime, Controller.defaultDestination)
-            ]);
+                this.loadRentData(model, Controller.defaultNumberOfBedrooms),
+                this.loadCommuteData(model, Controller.defaultArrivalTime, Controller.defaultDestination)
+            ]).then(() => Q(model));
         }
 
-        private loadCommuteData(time: number, stationName: string): Q.Promise<void> {
+        private loadCommuteData(model: Model, time: number, stationName: string): Q.Promise<void> {
             var filepath: string = Controller.departureTimesFolder + time + "/" + stationName + ".json";
 
-            return Q($.getJSON(filepath)).then(data => { this.model.commutes = data; return null; });
+            return Q($.getJSON(filepath)).then(data => { model.commutes = data; return null; });
         }
 
-        private loadRentData(numberOfBedrooms: number): Q.Promise<void> {
+        private loadRentData(model: Model, numberOfBedrooms: number): Q.Promise<void> {
             var filepath: string = Controller.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
 
-            return Q($.getJSON(filepath)).then(data => { this.model.rents = data; return null; });
+            return Q($.getJSON(filepath)).then(data => { model.rents = data; return null; });
         }
 
-        private initializeView(): void {
-            this.view = new ChartView(this.model);
-
-            d3.selectAll(".bargroup").on("mouseover", d => { this.notifyAndHighlight(d.name); });
-        }
-
-        public updateBedroomCount(bedroomCount: number) {
-            this.loadRentData(bedroomCount);
-        }
-
-        public updateArrivalTime(arrivalTime: number) {
-            this.loadCommuteData(arrivalTime, this.model.commutes.destination);
-        }
-
-        public updateDestination(stationName: string) {
-            this.loadCommuteData(this.model.commutes.arrivalTime, stationName);
-        }
-
-        private notifyAndHighlight(name: string) {
-            this.mouseoverListener(name);
-            this.highlight(name);
-        }
-
-        public highlight(name: string) {
-            this.view.highlightStation(name);
+        private initializeSelf(model: Model): void {
+            model.destinationListeners.push(name => this.loadCommuteData(this.model, this.model.commutes.arrivalTime, name));
+            model.arrivalTimeListeners.push(time => this.loadCommuteData(this.model, time, this.model.commutes.destination));
+            model.bedroomCountListeners.push(count => this.loadRentData(this.model, count));
         }
     }
 }
@@ -270,8 +257,8 @@ module CommutesAndRent {
             this.model = model;
 
             model.dataUpdateListeners.push(() => this.update());
+            model.highlightListeners.push(name => this.highlightStation(name));
 
-            console.log(model.rents);
             this.svg = d3.select("#chart");
 
             this.initialize();
@@ -280,17 +267,16 @@ module CommutesAndRent {
         private initialize(): void {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g")
-                .classed("bargroup", true);
+            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g");
 
-            selection.append("rect")
-                .classed("background", true);
+            selection
+                .classed("bargroup", true)
+                .on('click', d => this.expandOrCollapseTime(d.time))
+                .on('mouseover', d => this.model.highlighted = d.name);
 
-            selection.append("rect")
-                .classed("rect", true);
-
-            selection.append("text")
-                .classed("label", true);
+            selection.append("rect").classed("background", true);
+            selection.append("rect").classed("rect", true);
+            selection.append("text").classed("label", true);
 
             this.update(dataset);
         }
@@ -304,17 +290,9 @@ module CommutesAndRent {
 
             var selection = d3.selectAll(".bargroup").data(dataset, rentTime => rentTime.name);
 
-            selection
-                .on('click', d => this.expandOrCollapseTime(d.time));
-
-            selection.select(".rect")
-                .attr(this.graphics.rectAttrs());
-
-            selection.select(".background")
-                .attr(this.graphics.backgroundAttrs());
-
-            selection.select(".label")
-                .attr(this.graphics.labelAttrs());
+            selection.select(".rect").attr(this.graphics.rectAttrs());
+            selection.select(".background").attr(this.graphics.backgroundAttrs());
+            selection.select(".label").attr(this.graphics.labelAttrs());
 
             this.expandOrCollapseTime(null);
             this.highlightStation(this.currentlyHighlighted);
@@ -380,17 +358,6 @@ module CommutesAndRent {
 }
 
 module CommutesAndRent {
-
-    export class ChartConstants {
-
-        public static pixelsPerMinute: number = 15;
-        public static barSpacing: number = 2;
-
-        public static margins: any = { top: 50, right: 100, bottom: 50, left: 50 };
-
-        public static xAxisOffset: number = 40;
-        public static yAxisOffset: number = 40;
-    }
 
     export class Graphics {
 
@@ -537,4 +504,16 @@ module CommutesAndRent {
                 .call(axis);
         }
     }
+
+    export class ChartConstants {
+
+        public static pixelsPerMinute: number = 15;
+        public static barSpacing: number = 2;
+
+        public static margins: any = { top: 50, right: 100, bottom: 50, left: 50 };
+
+        public static xAxisOffset: number = 40;
+        public static yAxisOffset: number = 40;
+    }
+
 }

@@ -5,62 +5,40 @@
     d.prototype = new __();
 };
 window.onload = function () {
-    var map = new CommutesAndRent.Map();
     var controller = new CommutesAndRent.Controller();
-
-    var sliders = new CommutesAndRent.Sliders();
-    sliders.updateTimeSubscriber = function (time) {
-        return controller.updateArrivalTime(time);
-    };
-    sliders.updateBedroomSubscriber = function (count) {
-        return controller.updateBedroomCount(count);
-    };
-
-    map.clickListener = function (name) {
-        return controller.updateDestination(name);
-    };
-    map.mouseoverListener = function (name) {
-        return controller.highlight(name);
-    };
-
-    controller.mouseoverListener = function (name) {
-        return map.highlightMarker(name);
-    };
 };
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
-    var Sliders = (function () {
+    var SlidersController = (function () {
         //TODO: Defaults are currently in the controller.
-        function Sliders() {
-            this.updateTimeSubscriber = function () {
-            };
-            this.updateBedroomSubscriber = function () {
-            };
+        function SlidersController(model) {
+            this.model = model;
+
             this.makeTimeSlider();
             this.makeBedroomCountSlider();
         }
-        Sliders.prototype.makeTimeSlider = function () {
+        SlidersController.prototype.makeTimeSlider = function () {
             var _this = this;
             var slider = d3slider().axis(true).min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime).on("slide", function (event, value) {
-                return _this.updateTimeSubscriber(SliderConstants.hoursToMinutes(value));
+                return _this.model.arrivalTime = SliderConstants.hoursToMinutes(value);
             });
 
             d3.select("#timeslider").call(slider);
         };
 
-        Sliders.prototype.makeBedroomCountSlider = function () {
+        SlidersController.prototype.makeBedroomCountSlider = function () {
             var _this = this;
             var slider = d3slider().axis(true).min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom).on("slide", function (event, value) {
-                return _this.updateBedroomSubscriber(value);
+                return _this.model.bedroomCount = value;
             });
 
             d3.select("#bedroomslider").call(slider);
         };
-        Sliders.departureTimesFolder = "preprocessor-output/processed-departure-times/";
-        return Sliders;
+        SlidersController.departureTimesFolder = "preprocessor-output/processed-departure-times/";
+        return SlidersController;
     })();
-    CommutesAndRent.Sliders = Sliders;
+    CommutesAndRent.SlidersController = SlidersController;
 
     var SliderConstants = (function () {
         function SliderConstants() {
@@ -81,72 +59,58 @@ var CommutesAndRent;
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
-    var Map = (function () {
-        function Map() {
+    var MapView = (function () {
+        function MapView(model) {
             var _this = this;
-            this.clickListener = function () {
-            };
-            this.mouseoverListener = function () {
-            };
             this.markerLookup = d3.map();
             this.currentlyHighlightedMarker = null;
-            this.mapObject = Map.buildMap();
+            this.mapObject = MapView.makeMapObject();
 
-            Q($.getJSON(Map.locationDataPath)).then(function (data) {
+            this.model = model;
+            this.model.highlightListeners.push(function (name) {
+                return _this.highlightMarker(name);
+            });
+
+            Q($.getJSON(MapConstants.locationDataPath)).then(function (data) {
                 return _this.addMarkers(data);
             });
         }
-        Map.buildMap = function () {
-            var map = L.map("map").setView(Map.defaultCenter, Map.defaultZoom);
+        MapView.makeMapObject = function () {
+            var map = L.map("map").setView(MapConstants.defaultCenter, MapConstants.defaultZoom);
 
-            new L.TileLayer(Map.mapTileURLTemplate, { mapid: Map.mapId }).addTo(map);
+            new L.TileLayer(MapConstants.mapTileURLTemplate, { mapid: MapConstants.mapId }).addTo(map);
 
             return map;
         };
 
-        Map.prototype.addMarkers = function (locations) {
+        MapView.prototype.addMarkers = function (locations) {
             var _this = this;
             for (var i = 0; i < locations.length; i++) {
                 var latLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                var marker = new StationMarker(locations[i].name, latLng, { icon: Map.defaultIcon }).addTo(this.mapObject).on("click", function (e) {
-                    return _this.clickListener(e.target.name);
+                var marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon }).addTo(this.mapObject).on("click", function (e) {
+                    return _this.model.destination = e.target.name;
                 }).on("mouseover", function (e) {
-                    return _this.notifyAndHighlight(e.target.name);
+                    return _this.model.highlighted = e.target.name;
                 });
 
                 this.markerLookup.set(locations[i].name, marker);
             }
         };
 
-        Map.prototype.notifyAndHighlight = function (name) {
-            this.mouseoverListener(name);
-            this.highlightMarker(name);
-        };
-
-        Map.prototype.highlightMarker = function (name) {
+        MapView.prototype.highlightMarker = function (name) {
             if (this.currentlyHighlightedMarker !== null) {
-                this.currentlyHighlightedMarker.setIcon(Map.defaultIcon);
+                this.currentlyHighlightedMarker.setIcon(MapConstants.defaultIcon);
             }
 
             var marker = this.markerLookup.get(name);
-            marker.setIcon(Map.highlightIcon);
+            marker.setIcon(MapConstants.highlightIcon);
 
             this.currentlyHighlightedMarker = marker;
         };
-        Map.mapTileURLTemplate = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
-        Map.mapId = "coffeetable.hinlda0l";
-
-        Map.defaultCenter = new L.LatLng(51.505, -0.09);
-        Map.defaultZoom = 13;
-
-        Map.defaultIcon = L.icon({ iconUrl: "default-icon.png" });
-        Map.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png" });
-
-        Map.locationDataPath = "preprocessor-output/processed-locations/locations.json";
-        return Map;
+        return MapView;
     })();
-    CommutesAndRent.Map = Map;
+    CommutesAndRent.MapView = MapView;
 
     var StationMarker = (function (_super) {
         __extends(StationMarker, _super);
@@ -157,15 +121,90 @@ var CommutesAndRent;
         }
         return StationMarker;
     })(L.Marker);
-    CommutesAndRent.StationMarker = StationMarker;
+
+    var MapConstants = (function () {
+        function MapConstants() {
+        }
+        MapConstants.mapTileURLTemplate = "http://api.tiles.mapbox.com/v3/{mapid}/{z}/{x}/{y}.png";
+        MapConstants.mapId = "coffeetable.hinlda0l";
+
+        MapConstants.defaultCenter = new L.LatLng(51.505, -0.09);
+        MapConstants.defaultZoom = 13;
+
+        MapConstants.defaultIcon = L.icon({ iconUrl: "default-icon.png" });
+        MapConstants.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png" });
+
+        MapConstants.locationDataPath = "preprocessor-output/processed-locations/locations.json";
+        return MapConstants;
+    })();
 })(CommutesAndRent || (CommutesAndRent = {}));
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
     var Model = (function () {
         function Model() {
+            this.bedroomCountListeners = [];
+            this.arrivalTimeListeners = [];
+            this.highlightListeners = [];
+            this.destinationListeners = [];
             this.dataUpdateListeners = [];
         }
+        Object.defineProperty(Model.prototype, "bedroomCount", {
+            get: function () {
+                return this._bedroomCount;
+            },
+            set: function (value) {
+                this._bedroomCount = value;
+                this.bedroomCountListeners.forEach(function (l) {
+                    return l(value);
+                });
+            },
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Model.prototype, "arrivalTime", {
+            get: function () {
+                return this._arrivalTime;
+            },
+            set: function (value) {
+                this._arrivalTime = value;
+                this.arrivalTimeListeners.forEach(function (l) {
+                    return l(value);
+                });
+            },
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Model.prototype, "highlighted", {
+            get: function () {
+                return this._highlighted;
+            },
+            set: function (value) {
+                this._highlighted = value;
+                this.highlightListeners.forEach(function (l) {
+                    return l(value);
+                });
+            },
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Model.prototype, "destination", {
+            get: function () {
+                return this._destination;
+            },
+            set: function (value) {
+                this._destination = value;
+                this.destinationListeners.forEach(function (l) {
+                    return l(value);
+                });
+            },
+            enumerable: true,
+            configurable: true
+        });
+
         Object.defineProperty(Model.prototype, "rents", {
             get: function () {
                 return this._rents;
@@ -203,69 +242,54 @@ var CommutesAndRent;
     var Controller = (function () {
         function Controller() {
             var _this = this;
-            this.mouseoverListener = function () {
-            };
-            this.initializeModel().then(function () {
-                return _this.initializeView();
+            this.initializeModel().then(function (model) {
+                _this.model = model;
+                _this.chart = new CommutesAndRent.ChartView(model);
+                _this.map = new CommutesAndRent.MapView(model);
+                _this.sliders = new CommutesAndRent.SlidersController(model);
+                _this.initializeSelf(model);
             });
         }
         Controller.prototype.initializeModel = function () {
-            this.model = new CommutesAndRent.Model();
+            var model = new CommutesAndRent.Model();
 
             return Q.all([
-                this.loadRentData(Controller.defaultNumberOfBedrooms),
-                this.loadCommuteData(Controller.defaultArrivalTime, Controller.defaultDestination)
-            ]);
+                this.loadRentData(model, Controller.defaultNumberOfBedrooms),
+                this.loadCommuteData(model, Controller.defaultArrivalTime, Controller.defaultDestination)
+            ]).then(function () {
+                return Q(model);
+            });
         };
 
-        Controller.prototype.loadCommuteData = function (time, stationName) {
-            var _this = this;
+        Controller.prototype.loadCommuteData = function (model, time, stationName) {
             var filepath = Controller.departureTimesFolder + time + "/" + stationName + ".json";
 
             return Q($.getJSON(filepath)).then(function (data) {
-                _this.model.commutes = data;
+                model.commutes = data;
                 return null;
             });
         };
 
-        Controller.prototype.loadRentData = function (numberOfBedrooms) {
-            var _this = this;
+        Controller.prototype.loadRentData = function (model, numberOfBedrooms) {
             var filepath = Controller.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
 
             return Q($.getJSON(filepath)).then(function (data) {
-                _this.model.rents = data;
+                model.rents = data;
                 return null;
             });
         };
 
-        Controller.prototype.initializeView = function () {
+        Controller.prototype.initializeSelf = function (model) {
             var _this = this;
-            this.view = new CommutesAndRent.ChartView(this.model);
-
-            d3.selectAll(".bargroup").on("mouseover", function (d) {
-                _this.notifyAndHighlight(d.name);
+            model.destinationListeners.push(function (name) {
+                return _this.loadCommuteData(_this.model, _this.model.commutes.arrivalTime, name);
             });
-        };
-
-        Controller.prototype.updateBedroomCount = function (bedroomCount) {
-            this.loadRentData(bedroomCount);
-        };
-
-        Controller.prototype.updateArrivalTime = function (arrivalTime) {
-            this.loadCommuteData(arrivalTime, this.model.commutes.destination);
-        };
-
-        Controller.prototype.updateDestination = function (stationName) {
-            this.loadCommuteData(this.model.commutes.arrivalTime, stationName);
-        };
-
-        Controller.prototype.notifyAndHighlight = function (name) {
-            this.mouseoverListener(name);
-            this.highlight(name);
-        };
-
-        Controller.prototype.highlight = function (name) {
-            this.view.highlightStation(name);
+            model.arrivalTimeListeners.push(function (time) {
+                return _this.loadCommuteData(_this.model, time, _this.model.commutes.destination);
+            });
+            model.bedroomCountListeners.push(function (count) {
+                return _this.loadRentData(_this.model, count);
+            });
         };
         Controller.defaultArrivalTime = 480;
         Controller.defaultDestination = "Barbican";
@@ -288,28 +312,34 @@ var CommutesAndRent;
             model.dataUpdateListeners.push(function () {
                 return _this.update();
             });
+            model.highlightListeners.push(function (name) {
+                return _this.highlightStation(name);
+            });
 
-            console.log(model.rents);
             this.svg = d3.select("#chart");
 
             this.initialize();
         }
         ChartView.prototype.initialize = function () {
+            var _this = this;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g").classed("bargroup", true);
+            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g");
+
+            selection.classed("bargroup", true).on('click', function (d) {
+                return _this.expandOrCollapseTime(d.time);
+            }).on('mouseover', function (d) {
+                return _this.model.highlighted = d.name;
+            });
 
             selection.append("rect").classed("background", true);
-
             selection.append("rect").classed("rect", true);
-
             selection.append("text").classed("label", true);
 
             this.update(dataset);
         };
 
         ChartView.prototype.update = function (dataset) {
-            var _this = this;
             if (typeof dataset === "undefined") {
                 dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
             }
@@ -320,14 +350,8 @@ var CommutesAndRent;
                 return rentTime.name;
             });
 
-            selection.on('click', function (d) {
-                return _this.expandOrCollapseTime(d.time);
-            });
-
             selection.select(".rect").attr(this.graphics.rectAttrs());
-
             selection.select(".background").attr(this.graphics.backgroundAttrs());
-
             selection.select(".label").attr(this.graphics.labelAttrs());
 
             this.expandOrCollapseTime(null);
@@ -405,20 +429,6 @@ var CommutesAndRent;
 
 var CommutesAndRent;
 (function (CommutesAndRent) {
-    var ChartConstants = (function () {
-        function ChartConstants() {
-        }
-        ChartConstants.pixelsPerMinute = 15;
-        ChartConstants.barSpacing = 2;
-
-        ChartConstants.margins = { top: 50, right: 100, bottom: 50, left: 50 };
-
-        ChartConstants.xAxisOffset = 40;
-        ChartConstants.yAxisOffset = 40;
-        return ChartConstants;
-    })();
-    CommutesAndRent.ChartConstants = ChartConstants;
-
     var Graphics = (function () {
         function Graphics(dataset) {
             this.sizes = d3.map();
@@ -575,5 +585,19 @@ var CommutesAndRent;
         };
         return AxisBuilders;
     })();
+
+    var ChartConstants = (function () {
+        function ChartConstants() {
+        }
+        ChartConstants.pixelsPerMinute = 15;
+        ChartConstants.barSpacing = 2;
+
+        ChartConstants.margins = { top: 50, right: 100, bottom: 50, left: 50 };
+
+        ChartConstants.xAxisOffset = 40;
+        ChartConstants.yAxisOffset = 40;
+        return ChartConstants;
+    })();
+    CommutesAndRent.ChartConstants = ChartConstants;
 })(CommutesAndRent || (CommutesAndRent = {}));
 //# sourceMappingURL=commutes-and-rent.js.map
