@@ -39,8 +39,7 @@ html, body, #app {
 }
 
 .bargroup .background {
-    visibility: hidden;
-    pointer-events: none;
+    opacity: 0;
 }
 
 .bargroup .rect, .bargroup .median {
@@ -83,8 +82,7 @@ html, body, #app {
 }
 
 .bargroup.expanded .background {
-    visibility: visible;
-    pointer-events: all;
+    opacity: 1;
     fill: gainsboro;
     stroke-width: 0;
     transition-duration: 0.25s;

@@ -56,6 +56,7 @@ module CommutesAndRent {
     
     export class MapView {
         private markerLookup: D3.Map = d3.map();
+
         private currentHighlightedMarkers: L.Marker[] = [];
         private currentNullMarkers: L.Marker[] = [];
         private currentDestinationMarker: L.Marker = null;
@@ -75,6 +76,7 @@ module CommutesAndRent {
                     this.model.highlightListeners.push(() => this.highlightMarkers());
                     this.model.destinationListeners.push(() => this.highlightDestination());
                     this.model.dataUpdateListeners.push(() => this.nullMarkers());
+                    this.model.moveToListeners.push(name => this.moveTo(name));
                 });
         }
 
@@ -153,7 +155,11 @@ module CommutesAndRent {
             });
 
             this.currentNullMarkers = markers;
+        }
 
+        private moveTo(name: string): void {
+            var center = this.markerLookup.get(name).getLatLng();
+            this.mapObject.setView(center, MapConstants.defaultZoom);
         }
     }
 
@@ -192,6 +198,10 @@ module CommutesAndRent {
 module CommutesAndRent {
 
     export class Model {
+
+        public moveToListeners: { (string): void; }[] = [];
+        public moveTo(name: string) { this.moveToListeners.forEach(l => l(name)); }
+
         public bedroomCountListeners: { (): void; }[] = [];
         private _bedroomCount: number;
         public get bedroomCount(): number { return this._bedroomCount; }
@@ -253,16 +263,9 @@ module CommutesAndRent {
 
             this.initializeModel()
                 .then(model => {
-
-                    console.log("controllerup");
                     this.model = model;
-                    console.log("modelup");
                     this.chart = new ChartView(model);
-
-                    console.log("chartup");
                     this.map = new MapView(model);
-
-                    console.log("mapup");
                     this.sliders = new SlidersController(model);
                     this.initializeSelf(model);
                 });
@@ -316,7 +319,7 @@ module CommutesAndRent {
 
         private graphics: Graphics;
 
-        private currentlyExpanded: number;
+        private currentlyExpanded: number = null;
 
         constructor(model: Model) {
             this.model = model;
@@ -331,11 +334,14 @@ module CommutesAndRent {
         private initialize(): void {
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
+            //d3.select("#chart")
+            //    .on('click', () => this.expandOrCollapseTime(null));
+
             var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
 
             selection
                 .classed("bargroup", true)
-                .on('click', d => this.expandOrCollapseTime(d.time))
+                .on('click', d => this.expandOrCollapseTime(d))
                 .on('mouseover', d => this.model.highlighted = this.getStationsToHighlight(d));
 
             selection.append("rect").classed("background", true);
@@ -350,7 +356,7 @@ module CommutesAndRent {
             if (mouseoveredData.time === this.currentlyExpanded) {
                 return [mouseoveredData.name];
             } else {
-                return this.data.filter(e => e.time === mouseoveredData.time).map(e => e.name);
+                return this.data.filter(e => e.time === mouseoveredData.time && e.time !== this.currentlyExpanded).map(e => e.name);
             }
         } 
 
@@ -372,15 +378,19 @@ module CommutesAndRent {
             this.highlightDestination();
         }
 
-        private expandOrCollapseTime(time: number): void {
-            if (time === this.currentlyExpanded) {
-                this.expandTime(null);
+        private expandOrCollapseTime(data: RentTime): void {
+            if (data !== null && data.time === this.currentlyExpanded) {
+                this.model.moveTo(data.name);
+            } else if (data !== null && this.currentlyExpanded === null) {
+                this.expandTime(data.time);
             } else {
-                this.expandTime(time);
+                this.expandTime(null);
             }
         }
 
         private expandTime(time: number): void {
+            console.log(time);
+
             var selection = d3.selectAll(".bargroup");
 
             selection.classed("expanded", d => d.time === time);

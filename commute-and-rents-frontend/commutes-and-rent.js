@@ -83,6 +83,9 @@ var CommutesAndRent;
                 _this.model.dataUpdateListeners.push(function () {
                     return _this.nullMarkers();
                 });
+                _this.model.moveToListeners.push(function (name) {
+                    return _this.moveTo(name);
+                });
             });
         }
         MapView.makeMapObject = function () {
@@ -174,6 +177,11 @@ var CommutesAndRent;
 
             this.currentNullMarkers = markers;
         };
+
+        MapView.prototype.moveTo = function (name) {
+            var center = this.markerLookup.get(name).getLatLng();
+            this.mapObject.setView(center, MapConstants.defaultZoom);
+        };
         return MapView;
     })();
     CommutesAndRent.MapView = MapView;
@@ -211,6 +219,7 @@ var CommutesAndRent;
 (function (CommutesAndRent) {
     var Model = (function () {
         function Model() {
+            this.moveToListeners = [];
             this.bedroomCountListeners = [];
             this.arrivalTimeListeners = [];
             this.highlightListeners = [];
@@ -218,6 +227,12 @@ var CommutesAndRent;
             this.destinationListeners = [];
             this.dataUpdateListeners = [];
         }
+        Model.prototype.moveTo = function (name) {
+            this.moveToListeners.forEach(function (l) {
+                return l(name);
+            });
+        };
+
         Object.defineProperty(Model.prototype, "bedroomCount", {
             get: function () {
                 return this._bedroomCount;
@@ -312,15 +327,9 @@ var CommutesAndRent;
         function Controller() {
             var _this = this;
             this.initializeModel().then(function (model) {
-                console.log("controllerup");
                 _this.model = model;
-                console.log("modelup");
                 _this.chart = new CommutesAndRent.ChartView(model);
-
-                console.log("chartup");
                 _this.map = new CommutesAndRent.MapView(model);
-
-                console.log("mapup");
                 _this.sliders = new CommutesAndRent.SlidersController(model);
                 _this.initializeSelf(model);
             });
@@ -390,6 +399,7 @@ var CommutesAndRent;
     var ChartView = (function () {
         function ChartView(model) {
             var _this = this;
+            this.currentlyExpanded = null;
             this.model = model;
 
             this.initialize();
@@ -408,10 +418,12 @@ var CommutesAndRent;
             var _this = this;
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
+            //d3.select("#chart")
+            //    .on('click', () => this.expandOrCollapseTime(null));
             var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
 
             selection.classed("bargroup", true).on('click', function (d) {
-                return _this.expandOrCollapseTime(d.time);
+                return _this.expandOrCollapseTime(d);
             }).on('mouseover', function (d) {
                 return _this.model.highlighted = _this.getStationsToHighlight(d);
             });
@@ -425,11 +437,12 @@ var CommutesAndRent;
         };
 
         ChartView.prototype.getStationsToHighlight = function (mouseoveredData) {
+            var _this = this;
             if (mouseoveredData.time === this.currentlyExpanded) {
                 return [mouseoveredData.name];
             } else {
                 return this.data.filter(function (e) {
-                    return e.time === mouseoveredData.time;
+                    return e.time === mouseoveredData.time && e.time !== _this.currentlyExpanded;
                 }).map(function (e) {
                     return e.name;
                 });
@@ -458,15 +471,19 @@ var CommutesAndRent;
             this.highlightDestination();
         };
 
-        ChartView.prototype.expandOrCollapseTime = function (time) {
-            if (time === this.currentlyExpanded) {
-                this.expandTime(null);
+        ChartView.prototype.expandOrCollapseTime = function (data) {
+            if (data !== null && data.time === this.currentlyExpanded) {
+                this.model.moveTo(data.name);
+            } else if (data !== null && this.currentlyExpanded === null) {
+                this.expandTime(data.time);
             } else {
-                this.expandTime(time);
+                this.expandTime(null);
             }
         };
 
         ChartView.prototype.expandTime = function (time) {
+            console.log(time);
+
             var selection = d3.selectAll(".bargroup");
 
             selection.classed("expanded", function (d) {
