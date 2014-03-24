@@ -19,18 +19,32 @@ var CommutesAndRent;
         }
         SlidersController.prototype.makeTimeSlider = function () {
             var _this = this;
-            var slider = d3slider().axis(true).min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime).value(SliderConstants.minutesToHours(this.model.arrivalTime)).on("slide", function (event, value) {
+            var slider = d3slider().min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime).value(SliderConstants.minutesToHours(this.model.arrivalTime)).on("slide", function (event, value) {
                 return _this.model.arrivalTime = SliderConstants.hoursToMinutes(value);
             });
+
+            var scale = d3.scale.ordinal().domain(d3.range(SliderConstants.minTime, SliderConstants.maxTime, SliderConstants.stepTime)).rangePoints([0, $("#timeslider").width()]);
+
+            var axis = d3.svg.axis().scale(scale).tickValues(d3.range(SliderConstants.minTime, SliderConstants.maxTime + 1, SliderConstants.stepTime));
+
+            slider.axis(axis);
 
             d3.select("#timeslider").call(slider);
         };
 
         SlidersController.prototype.makeBedroomCountSlider = function () {
             var _this = this;
-            var slider = d3slider().axis(true).min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom).value(this.model.bedroomCount).on("slide", function (event, value) {
-                return _this.model.bedroomCount = value;
+            var slider = d3slider().min(0).max(SliderConstants.propertyTypes.length - 1).step(1).value(SliderConstants.rentFilenames.indexOf(this.model.propertyFile)).on("slide", function (event, value) {
+                return _this.model.propertyFile = SliderConstants.rentFilenames[value];
             });
+
+            var scale = d3.scale.ordinal().domain(d3.range(0, SliderConstants.propertyTypes.length - 1, 1)).rangePoints([0, $("#timeslider").width()]);
+
+            var axis = d3.svg.axis().scale(scale).tickValues(d3.range(0, SliderConstants.propertyTypes.length, 1)).tickFormat(function (d) {
+                return SliderConstants.propertyTypes[d];
+            });
+
+            slider.axis(axis);
 
             d3.select("#bedroomslider").call(slider);
         };
@@ -51,9 +65,8 @@ var CommutesAndRent;
             return n / 60 + 1;
         };
 
-        SliderConstants.minBedroom = 1;
-        SliderConstants.maxBedroom = 4;
-        SliderConstants.stepBedroom = 1;
+        SliderConstants.propertyTypes = ["Room", "Studio", "1 bedroom", "2 bedrooms", "3 bedrooms", "4+ bedrooms"];
+        SliderConstants.rentFilenames = ["room-rents.json", "studio-rents.json", "1-bedroom-rents.json", "2-bedroom-rents.json", "3-bedroom-rents.json", "4-bedroom-rents.json"];
         return SliderConstants;
     })();
 })(CommutesAndRent || (CommutesAndRent = {}));
@@ -220,7 +233,7 @@ var CommutesAndRent;
     var Model = (function () {
         function Model() {
             this.moveToListeners = [];
-            this.bedroomCountListeners = [];
+            this.propertyFileListeners = [];
             this.arrivalTimeListeners = [];
             this.highlightListeners = [];
             this._highlighted = [];
@@ -233,13 +246,13 @@ var CommutesAndRent;
             });
         };
 
-        Object.defineProperty(Model.prototype, "bedroomCount", {
+        Object.defineProperty(Model.prototype, "propertyFile", {
             get: function () {
-                return this._bedroomCount;
+                return this._propertyFile;
             },
             set: function (value) {
-                this._bedroomCount = value;
-                this.bedroomCountListeners.forEach(function (l) {
+                this._propertyFile = value;
+                this.propertyFileListeners.forEach(function (l) {
                     return l();
                 });
             },
@@ -339,7 +352,7 @@ var CommutesAndRent;
 
             model.arrivalTime = ControllerConstants.defaultArrivalTime;
             model.destination = ControllerConstants.defaultDestination;
-            model.bedroomCount = ControllerConstants.defaultNumberOfBedrooms;
+            model.propertyFile = ControllerConstants.defaultPropertyFile;
 
             return Q.all([
                 this.loadRentData(model),
@@ -358,7 +371,7 @@ var CommutesAndRent;
         };
 
         Controller.prototype.loadRentData = function (model) {
-            var filepath = ControllerConstants.rentStatsFolder + model.bedroomCount + "-bedroom-rents.json";
+            var filepath = ControllerConstants.rentStatsFolder + model.propertyFile;
             return Q($.getJSON(filepath)).then(function (data) {
                 model.rents = data;
                 return null;
@@ -373,7 +386,7 @@ var CommutesAndRent;
             model.arrivalTimeListeners.push(function () {
                 return _this.loadCommuteData(model);
             });
-            model.bedroomCountListeners.push(function () {
+            model.propertyFileListeners.push(function () {
                 return _this.loadRentData(model);
             });
         };
@@ -386,7 +399,7 @@ var CommutesAndRent;
         }
         ControllerConstants.defaultArrivalTime = 480;
         ControllerConstants.defaultDestination = "Barbican";
-        ControllerConstants.defaultNumberOfBedrooms = 2;
+        ControllerConstants.defaultPropertyFile = "2-bedroom-rents.json";
 
         ControllerConstants.rentStatsFolder = "preprocessor-output/processed-rents/";
         ControllerConstants.departureTimesFolder = "preprocessor-output/processed-departure-times/";
@@ -418,8 +431,6 @@ var CommutesAndRent;
             var _this = this;
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            //d3.select("#chart")
-            //    .on('click', () => this.expandOrCollapseTime(null));
             var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
 
             selection.classed("bargroup", true).on('click', function (d) {
@@ -717,15 +728,17 @@ var CommutesAndRent;
         function AxisBuilders() {
         }
         AxisBuilders.makeXAxis = function (xScale) {
-            var axis = d3.svg.axis().scale(xScale).orient("top");
+            var axis = d3.svg.axis().scale(xScale).orient("top").tickFormat(function (d) {
+                return "£" + d;
+            });
 
-            d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").call(axis);
+            d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").transition().call(axis);
         };
 
         AxisBuilders.makeYAxis = function (yScale) {
             var axis = d3.svg.axis().scale(yScale).orient("left");
 
-            d3.select(".y.axis").attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)").call(axis);
+            d3.select(".y.axis").attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)").transition().call(axis);
         };
         return AxisBuilders;
     })();

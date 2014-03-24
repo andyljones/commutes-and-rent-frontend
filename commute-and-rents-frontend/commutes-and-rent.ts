@@ -4,6 +4,14 @@
 
 declare function d3slider(): any;
 
+declare module D3 {
+    module Svg {
+        export interface Brush {
+            clamp(clamp: boolean): D3.Svg.Brush;
+        }
+    }
+}
+
 module CommutesAndRent {
         
     export class SlidersController {
@@ -19,20 +27,41 @@ module CommutesAndRent {
 
         private makeTimeSlider() {
             var slider: any = d3slider()
-                .axis(true)
                 .min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime)
                 .value(SliderConstants.minutesToHours(this.model.arrivalTime))
                 .on("slide", (event, value) => this.model.arrivalTime = SliderConstants.hoursToMinutes(value));
 
+            var scale = d3.scale.ordinal()
+                .domain(d3.range(SliderConstants.minTime, SliderConstants.maxTime, SliderConstants.stepTime))
+                .rangePoints([0, $("#timeslider").width()]);
+
+            var axis = d3.svg.axis()
+                .scale(scale)
+                .tickValues(d3.range(SliderConstants.minTime, SliderConstants.maxTime + 1, SliderConstants.stepTime));
+
+            slider.axis(axis);
+
             d3.select("#timeslider").call(slider);
+
+
         }
 
         private makeBedroomCountSlider() {
             var slider: any = d3slider()
-                .axis(true)
-                .min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom)
-                .value(this.model.bedroomCount)
-                .on("slide", (event, value) => this.model.bedroomCount = value);
+                .min(0).max(SliderConstants.propertyTypes.length - 1).step(1)
+                .value(SliderConstants.rentFilenames.indexOf(this.model.propertyFile))
+                .on("slide", (event, value) => this.model.propertyFile = SliderConstants.rentFilenames[value]);
+
+            var scale = d3.scale.ordinal()
+                .domain(d3.range(0, SliderConstants.propertyTypes.length - 1, 1))
+                .rangePoints([0, $("#timeslider").width()]);
+
+            var axis = d3.svg.axis()
+                .scale(scale)
+                .tickValues(d3.range(0, SliderConstants.propertyTypes.length, 1))
+                .tickFormat(d => SliderConstants.propertyTypes[d]);
+
+            slider.axis(axis);
 
             d3.select("#bedroomslider").call(slider);
         }
@@ -46,9 +75,8 @@ module CommutesAndRent {
         public static hoursToMinutes: (number) => number = n => 60 * (n - 1);
         public static minutesToHours: (number) => number = n => n/60 + 1;
 
-        public static minBedroom: number = 1;
-        public static maxBedroom: number = 4;
-        public static stepBedroom: number = 1;
+        public static propertyTypes: string[] = ["Room", "Studio", "1 bedroom", "2 bedrooms", "3 bedrooms", "4+ bedrooms"];
+        public static rentFilenames: string[] = ["room-rents.json", "studio-rents.json", "1-bedroom-rents.json", "2-bedroom-rents.json", "3-bedroom-rents.json", "4-bedroom-rents.json"];
     }
 }
 
@@ -202,10 +230,10 @@ module CommutesAndRent {
         public moveToListeners: { (string): void; }[] = [];
         public moveTo(name: string) { this.moveToListeners.forEach(l => l(name)); }
 
-        public bedroomCountListeners: { (): void; }[] = [];
-        private _bedroomCount: number;
-        public get bedroomCount(): number { return this._bedroomCount; }
-        public set bedroomCount(value: number) { this._bedroomCount = value; this.bedroomCountListeners.forEach(l => l()); }
+        public propertyFileListeners: { (): void; }[] = [];
+        private _propertyFile: string;
+        public get propertyFile(): string { return this._propertyFile; }
+        public set propertyFile(value: string) { this._propertyFile = value; this.propertyFileListeners.forEach(l => l()); }
 
         public arrivalTimeListeners: { (): void; }[] = [];
         private _arrivalTime: number;
@@ -276,7 +304,7 @@ module CommutesAndRent {
 
             model.arrivalTime = ControllerConstants.defaultArrivalTime;
             model.destination = ControllerConstants.defaultDestination;
-            model.bedroomCount = ControllerConstants.defaultNumberOfBedrooms;
+            model.propertyFile = ControllerConstants.defaultPropertyFile;
 
             return Q.all([
                 this.loadRentData(model),
@@ -290,21 +318,21 @@ module CommutesAndRent {
         }
 
         private loadRentData(model: Model): Q.Promise<void> {
-            var filepath: string = ControllerConstants.rentStatsFolder + model.bedroomCount + "-bedroom-rents.json";
+            var filepath: string = ControllerConstants.rentStatsFolder + model.propertyFile;
             return Q($.getJSON(filepath)).then(data => { model.rents = data; return null; });
         }
 
         private initializeSelf(model: Model): void {
             model.destinationListeners.push(() => this.loadCommuteData(model));
             model.arrivalTimeListeners.push(() => this.loadCommuteData(model));
-            model.bedroomCountListeners.push(() => this.loadRentData(model));
+            model.propertyFileListeners.push(() => this.loadRentData(model));
         }
     }
 
     class ControllerConstants {
         public static defaultArrivalTime: number = 480;
         public static defaultDestination: string = "Barbican";
-        public static defaultNumberOfBedrooms: number = 2;
+        public static defaultPropertyFile: string = "2-bedroom-rents.json";
         
         public static rentStatsFolder: string = "preprocessor-output/processed-rents/";
         public static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
@@ -333,9 +361,6 @@ module CommutesAndRent {
 
         private initialize(): void {
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
-
-            //d3.select("#chart")
-            //    .on('click', () => this.expandOrCollapseTime(null));
 
             var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
 
@@ -590,10 +615,12 @@ module CommutesAndRent {
         public static makeXAxis(xScale: D3.Scale.LinearScale): void {
             var axis: D3.Svg.Axis = d3.svg.axis()
                 .scale(xScale)
-                .orient("top");
+                .orient("top")
+                .tickFormat(d => "£" + d);
 
             d3.select(".x.axis")
                 .attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")")
+                .transition()
                 .call(axis);
         }
 
@@ -602,6 +629,7 @@ module CommutesAndRent {
 
             d3.select(".y.axis")
                 .attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)")
+                .transition()
                 .call(axis);
         }
     }
