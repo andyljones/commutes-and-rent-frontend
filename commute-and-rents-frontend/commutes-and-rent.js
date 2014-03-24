@@ -312,9 +312,19 @@ var CommutesAndRent;
         ChartView.prototype.expandTime = function (time) {
             var selection = this.svg.selectAll(".bargroup");
 
+            selection.classed("expanded", function (d) {
+                return d.time === time;
+            });
+            selection.classed("notexpanded", function (d) {
+                return (time !== null) && (d.time !== time);
+            });
+
             selection.attr(this.graphics.groupPositionAttrs(time));
             selection.select(".background").attr(this.graphics.backgroundAttrs(time));
             selection.select(".label").text(this.graphics.labelText(time));
+
+            d3.select(".y.axis").classed("suppressed", time !== null);
+
             this.currentlyExpanded = time;
         };
 
@@ -450,13 +460,7 @@ var CommutesAndRent;
             return {
                 x: ChartConstants.margins.left,
                 width: this.chartWidth - ChartConstants.margins.left,
-                height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
-                visibility: function (d) {
-                    return d.time === expandedTime ? "visible" : "hidden";
-                },
-                "pointer-events": function (d) {
-                    return d.time === expandedTime ? "auto" : "none";
-                }
+                height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing
             };
         };
 

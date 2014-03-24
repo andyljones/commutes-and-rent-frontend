@@ -39,13 +39,34 @@ html, body, #app {
 }
 
 .bargroup .background {
-    fill: gainsboro;
-    stroke-width: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .bargroup .rect {
     fill: navy;
     opacity: 0.4;
+}
+
+/* Transition classes */
+
+.bargroup.expanded .rect {
+    opacity: 1;
+}
+
+.bargroup.notexpanded .rect, .bargroup.notexpanded .label {
+    opacity: 0.1;
+}
+
+.bargroup.expanded .background {
+    visibility: visible;
+    pointer-events: all;
+    fill: gainsboro;
+    stroke-width: 0;
+}
+
+.y.axis.suppressed {
+    opacity: 0.1;
 }
 
 .bargroup.highlighted .rect, .bargroup.highlighted .label {

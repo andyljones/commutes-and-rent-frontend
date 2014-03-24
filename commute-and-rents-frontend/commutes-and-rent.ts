@@ -328,9 +328,15 @@ module CommutesAndRent {
         private expandTime(time: number): void {
             var selection = this.svg.selectAll(".bargroup");
 
+            selection.classed("expanded", d => d.time === time);
+            selection.classed("notexpanded", d => (time !== null) && (d.time !== time));
+
             selection.attr(this.graphics.groupPositionAttrs(time));
             selection.select(".background").attr(this.graphics.backgroundAttrs(time));
             selection.select(".label").text(this.graphics.labelText(time));
+
+            d3.select(".y.axis").classed("suppressed", time !== null);
+            
             this.currentlyExpanded = time;
         }
 
@@ -452,9 +458,7 @@ module CommutesAndRent {
             return {
                 x: ChartConstants.margins.left,
                 width: this.chartWidth - ChartConstants.margins.left,
-                height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
-                visibility: (d: RentTime) => d.time === expandedTime ? "visible" : "hidden",
-                "pointer-events": (d: RentTime) => d.time === expandedTime ? "auto" : "none"
+                height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing
             };
         }
 
