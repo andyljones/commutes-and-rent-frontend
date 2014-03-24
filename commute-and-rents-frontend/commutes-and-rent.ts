@@ -1,6 +1,6 @@
 ﻿window.onload = () => {
     var map: CommutesAndRent.Map = new CommutesAndRent.Map();
-    var controller: CommutesAndRent.ChartController = new CommutesAndRent.ChartController();
+    var controller: CommutesAndRent.Controller = new CommutesAndRent.Controller();
 
     var sliders: CommutesAndRent.Sliders = new CommutesAndRent.Sliders();
     sliders.updateTimeSubscriber = time => controller.updateArrivalTime(time);
@@ -153,27 +153,12 @@ module CommutesAndRent {
 
 module CommutesAndRent
 {
-    export class ChartModel implements ChartModelView {
+    export class Model {
 
         public updateSubscriber: () => void = () => { };
 
         public rents: RentStatistic[];
         public commutes: CommuteTimes;
-        
-        private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
-        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
-
-        public loadCommuteData(time: number, stationName: string): Q.Promise<void> {
-            var filepath: string = ChartModel.departureTimesFolder + time + "/" + stationName + ".json";
-
-            return Q($.getJSON(filepath)).then(data => { this.commutes = data; this.updateSubscriber(); return null; });
-        }
-
-        public loadRentData(numberOfBedrooms: number): Q.Promise<void> {
-            var filepath: string = ChartModel.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-
-            return Q($.getJSON(filepath)).then(data => { this.rents = data; this.updateSubscriber(); return null; });
-        }
     }
 
     export interface RentStatistic {
@@ -193,51 +178,65 @@ module CommutesAndRent
         station: string;
         time: number;
     }
-
-    export interface ChartModelView {
-        rents: RentStatistic[];
-        commutes: CommuteTimes;
-        updateSubscriber: () => void;
-    }
 }
 
 module CommutesAndRent {
 
-    export class ChartController
+    export class Controller
     {
         public mouseoverListener: (name: string) => void = () => { };
 
-        private model: ChartModel;
+        private model: Model;
         private view: ChartView;
 
         private static defaultArrivalTime: number = 480;
         private static defaultDestination: string = "Barbican";
         private static defaultNumberOfBedrooms: number  = 1;
 
+        private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
+        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+
         constructor() { 
-            this.model = new ChartModel();
-            Q.all([
-                    this.model.loadRentData(ChartController.defaultNumberOfBedrooms),
-                    this.model.loadCommuteData(ChartController.defaultArrivalTime, ChartController.defaultDestination)
-                ])
-            .then(() => this.initialize());
+            this.initializeModel().then(() => this.initializeView());
         }
 
-        private initialize(): void {
+        private initializeModel(): Q.Promise<void[]> {
+            this.model = new Model();
+
+            return Q.all([
+                this.loadRentData(Controller.defaultNumberOfBedrooms),
+                this.loadCommuteData(Controller.defaultArrivalTime, Controller.defaultDestination)
+            ]);
+        }
+
+        private loadCommuteData(time: number, stationName: string): Q.Promise<void> {
+            var filepath: string = Controller.departureTimesFolder + time + "/" + stationName + ".json";
+
+            return Q($.getJSON(filepath)).then(data => { this.model.commutes = data; this.model.updateSubscriber(); return null; });
+        }
+
+        private loadRentData(numberOfBedrooms: number): Q.Promise<void> {
+            var filepath: string = Controller.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
+
+            return Q($.getJSON(filepath)).then(data => { this.model.rents = data; this.model.updateSubscriber(); return null; });
+        }
+
+        private initializeView(): void {
             this.view = new ChartView(this.model);
+
             d3.selectAll(".bargroup").on("mouseover", d => { this.notifyAndHighlight(d.name); });
         }
 
         public updateBedroomCount(bedroomCount: number) {
-            this.model.loadRentData(bedroomCount);
+            this.loadRentData(bedroomCount);
         }
 
         public updateArrivalTime(arrivalTime: number) {
-            this.model.loadCommuteData(arrivalTime, this.model.commutes.destination);
+            this.loadCommuteData(arrivalTime, this.model.commutes.destination);
         }
 
         public updateDestination(stationName: string) {
-            this.model.loadCommuteData(this.model.commutes.arrivalTime, stationName);
+            this.loadCommuteData(this.model.commutes.arrivalTime, stationName);
         }
 
         private notifyAndHighlight(name: string) {
@@ -254,7 +253,7 @@ module CommutesAndRent {
 module CommutesAndRent {
 
     export class ChartView {
-        private model: ChartModelView;
+        private model: Model;
 
         private svg: D3.Selection;
 
@@ -263,7 +262,7 @@ module CommutesAndRent {
         private currentlyExpanded: number;
         private currentlyHighlighted: string;
 
-        constructor(model: ChartModelView) {
+        constructor(model: Model) {
             this.model = model;
             model.updateSubscriber = () => this.update();
 
@@ -406,7 +405,7 @@ module CommutesAndRent {
             AxisBuilders.makeXAxis(this.xScale);
             AxisBuilders.makeYAxis(this.yScale);
             
-            this.calculatePositions(dataset);
+            this.calculateYOffsets(dataset);
 
             Graphics.setChartHeight(dataset);
         }
@@ -418,7 +417,7 @@ module CommutesAndRent {
             $("#chart").height(ChartConstants.pixelsPerMinute*range);
         }
 
-        private calculatePositions(dataset: RentTime[]): void {
+        private calculateYOffsets(dataset: RentTime[]): void {
             var sorted = dataset.sort((a, b) => a.median - b.median);
 
             for (var i: number = 0; i < dataset.length; i++) {
