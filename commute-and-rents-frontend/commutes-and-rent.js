@@ -164,9 +164,35 @@ var CommutesAndRent;
 (function (CommutesAndRent) {
     var Model = (function () {
         function Model() {
-            this.updateSubscriber = function () {
-            };
+            this.dataUpdateListeners = [];
         }
+        Object.defineProperty(Model.prototype, "rents", {
+            get: function () {
+                return this._rents;
+            },
+            set: function (value) {
+                this._rents = value;
+                this.dataUpdateListeners.forEach(function (l) {
+                    return l();
+                });
+            },
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Model.prototype, "commutes", {
+            get: function () {
+                return this._commutes;
+            },
+            set: function (value) {
+                this._commutes = value;
+                this.dataUpdateListeners.forEach(function (l) {
+                    return l();
+                });
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Model;
     })();
     CommutesAndRent.Model = Model;
@@ -198,7 +224,6 @@ var CommutesAndRent;
 
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.model.commutes = data;
-                _this.model.updateSubscriber();
                 return null;
             });
         };
@@ -209,7 +234,6 @@ var CommutesAndRent;
 
             return Q($.getJSON(filepath)).then(function (data) {
                 _this.model.rents = data;
-                _this.model.updateSubscriber();
                 return null;
             });
         };
@@ -260,10 +284,12 @@ var CommutesAndRent;
         function ChartView(model) {
             var _this = this;
             this.model = model;
-            model.updateSubscriber = function () {
-                return _this.update();
-            };
 
+            model.dataUpdateListeners.push(function () {
+                return _this.update();
+            });
+
+            console.log(model.rents);
             this.svg = d3.select("#chart");
 
             this.initialize();

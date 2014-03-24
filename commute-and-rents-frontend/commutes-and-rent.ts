@@ -154,11 +154,15 @@ module CommutesAndRent {
 module CommutesAndRent
 {
     export class Model {
+        public dataUpdateListeners: { (): void; }[] = [];
 
-        public updateSubscriber: () => void = () => { };
+        private _rents: RentStatistic[];
+        public get rents(): RentStatistic[] { return this._rents; } 
+        public set rents(value: RentStatistic[]) { this._rents = value; this.dataUpdateListeners.forEach(l => l()); }
 
-        public rents: RentStatistic[];
-        public commutes: CommuteTimes;
+        private _commutes: CommuteTimes;
+        public get commutes(): CommuteTimes { return this._commutes; }
+        public set commutes(value: CommuteTimes) { this._commutes = value; this.dataUpdateListeners.forEach(l => l()); }
     }
 
     export interface RentStatistic {
@@ -212,13 +216,13 @@ module CommutesAndRent {
         private loadCommuteData(time: number, stationName: string): Q.Promise<void> {
             var filepath: string = Controller.departureTimesFolder + time + "/" + stationName + ".json";
 
-            return Q($.getJSON(filepath)).then(data => { this.model.commutes = data; this.model.updateSubscriber(); return null; });
+            return Q($.getJSON(filepath)).then(data => { this.model.commutes = data; return null; });
         }
 
         private loadRentData(numberOfBedrooms: number): Q.Promise<void> {
             var filepath: string = Controller.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
 
-            return Q($.getJSON(filepath)).then(data => { this.model.rents = data; this.model.updateSubscriber(); return null; });
+            return Q($.getJSON(filepath)).then(data => { this.model.rents = data; return null; });
         }
 
         private initializeView(): void {
@@ -264,8 +268,10 @@ module CommutesAndRent {
 
         constructor(model: Model) {
             this.model = model;
-            model.updateSubscriber = () => this.update();
 
+            model.dataUpdateListeners.push(() => this.update());
+
+            console.log(model.rents);
             this.svg = d3.select("#chart");
 
             this.initialize();
