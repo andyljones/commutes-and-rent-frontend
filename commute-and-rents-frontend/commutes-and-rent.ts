@@ -334,10 +334,10 @@ module CommutesAndRent {
 
             var selection = d3.selectAll(".bargroup").data(this.data, rentTime => rentTime.name);
 
-            selection.select(".rect").attr(this.graphics.rectAttrs());
-            selection.select(".median").attr(this.graphics.medianAttrs());
-            selection.select(".background").attr(this.graphics.backgroundAttrs());
-            selection.select(".label").attr(this.graphics.labelAttrs());
+            selection.select(".rect").transition().attr(this.graphics.rectAttrs());
+            selection.select(".median").transition().attr(this.graphics.medianAttrs());
+            selection.select(".background").transition().attr(this.graphics.backgroundAttrs());
+            selection.select(".label").transition().attr(this.graphics.labelAttrs());
 
             selection.classed("nulldata", d => d.median === null);
 
@@ -360,7 +360,7 @@ module CommutesAndRent {
             selection.classed("expanded", d => d.time === time);
             selection.classed("notexpanded", d => (time !== null) && (d.time !== time));
 
-            selection.attr(this.graphics.groupPositionAttrs(time));
+            selection.transition().attr(this.graphics.groupPositionAttrs(time));
             selection.select(".label").text(this.graphics.labelText(time));
 
             d3.select(".y.axis").classed("suppressed", time !== null);

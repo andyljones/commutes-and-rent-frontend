@@ -50,20 +50,27 @@ html, body, #app {
     stroke-width: 1;
 }
 
+.bargroup .median {
+    stroke: black;
+}
+
 /* Transition classes */
 
 .bargroup.destination .rect, .bargroup.destination .label {
     fill: green;
     opacity: 1;
+    transition-duration: 0.25s;
 }
 
 .bargroup.nulldata .rect, .bargroup.nulldata .label {
     fill: firebrick;
     opacity: 0.1;
+    transition-duration: 0.25s;
 }
 
 .bargroup.highlighted .rect, .bargroup.highlighted .label {
     fill: darkorange;
+    transition-duration: 0.1s;
 }
 
 .bargroup.expanded .rect, .bargroup.expanded .label, .bargroup.expanded .median {
@@ -72,6 +79,7 @@ html, body, #app {
 
 .bargroup.notexpanded .rect, .bargroup.notexpanded .label, .bargroup.notexpanded .median {
     opacity: 0.1;
+    transition-duration: 0.25s;
 }
 
 .bargroup.expanded .background {
@@ -79,12 +87,10 @@ html, body, #app {
     pointer-events: all;
     fill: gainsboro;
     stroke-width: 0;
+    transition-duration: 0.25s;
 }
 
 .y.axis.suppressed {
     opacity: 0.1;
-}
-
-.bargroup .median {
-    stroke: black;
+    transition-duration: 0.25s;
 }
