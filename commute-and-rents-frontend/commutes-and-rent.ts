@@ -57,6 +57,7 @@ module CommutesAndRent {
     export class MapView {
         private markerLookup: D3.Map = d3.map();
         private currentHighlightedMarkers: L.Marker[] = [];
+        private currentNullMarkers: L.Marker[] = [];
         private currentDestinationMarker: L.Marker = null;
         
         private mapObject: L.Map;
@@ -73,6 +74,7 @@ module CommutesAndRent {
                     this.highlightDestination();
                     this.model.highlightListeners.push(() => this.highlightMarkers());
                     this.model.destinationListeners.push(() => this.highlightDestination());
+                    this.model.dataUpdateListeners.push(() => this.nullMarkers());
                 });
         }
 
@@ -104,6 +106,8 @@ module CommutesAndRent {
             this.currentHighlightedMarkers.forEach(marker => {
                 if (marker === this.currentDestinationMarker) {
                     marker.setIcon(MapConstants.destinationIcon);
+                } else if (this.currentNullMarkers.some(n => n === marker)) {
+                    marker.setIcon(MapConstants.nullIcon);
                 } else {
                     marker.setIcon(MapConstants.defaultIcon);
                 }
@@ -129,6 +133,27 @@ module CommutesAndRent {
             marker.setIcon(MapConstants.destinationIcon);
 
             this.currentDestinationMarker = marker;
+        }
+
+        private nullMarkers(): void {
+            var names = this.model.rents.filter(rent => rent.median === null).map(rent => rent.name); 
+
+            this.currentNullMarkers.forEach(marker => {
+                if (marker === this.currentDestinationMarker) {
+                    marker.setIcon(MapConstants.destinationIcon);
+                } else {
+                    marker.setIcon(MapConstants.defaultIcon);
+                }
+            });
+
+            var markers = names.map(name => this.markerLookup.get(name));
+
+            markers.forEach(marker => {
+                marker.setIcon(MapConstants.nullIcon);
+            });
+
+            this.currentNullMarkers = markers;
+
         }
     }
 
@@ -158,7 +183,8 @@ module CommutesAndRent {
         public static defaultIcon: L.Icon = L.icon({ iconUrl: "default-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
         public static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
         public static destinationIcon: L.Icon = L.icon({ iconUrl: "destination-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
-        
+        public static nullIcon: L.Icon = L.icon({ iconUrl: "null-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+
         public static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
     }
 }

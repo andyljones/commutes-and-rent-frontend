@@ -65,6 +65,7 @@ var CommutesAndRent;
             var _this = this;
             this.markerLookup = d3.map();
             this.currentHighlightedMarkers = [];
+            this.currentNullMarkers = [];
             this.currentDestinationMarker = null;
             this.mapObject = MapView.makeMapObject();
 
@@ -78,6 +79,9 @@ var CommutesAndRent;
                 });
                 _this.model.destinationListeners.push(function () {
                     return _this.highlightDestination();
+                });
+                _this.model.dataUpdateListeners.push(function () {
+                    return _this.nullMarkers();
                 });
             });
         }
@@ -111,6 +115,10 @@ var CommutesAndRent;
             this.currentHighlightedMarkers.forEach(function (marker) {
                 if (marker === _this.currentDestinationMarker) {
                     marker.setIcon(MapConstants.destinationIcon);
+                } else if (_this.currentNullMarkers.some(function (n) {
+                    return n === marker;
+                })) {
+                    marker.setIcon(MapConstants.nullIcon);
                 } else {
                     marker.setIcon(MapConstants.defaultIcon);
                 }
@@ -139,6 +147,33 @@ var CommutesAndRent;
 
             this.currentDestinationMarker = marker;
         };
+
+        MapView.prototype.nullMarkers = function () {
+            var _this = this;
+            var names = this.model.rents.filter(function (rent) {
+                return rent.median === null;
+            }).map(function (rent) {
+                return rent.name;
+            });
+
+            this.currentNullMarkers.forEach(function (marker) {
+                if (marker === _this.currentDestinationMarker) {
+                    marker.setIcon(MapConstants.destinationIcon);
+                } else {
+                    marker.setIcon(MapConstants.defaultIcon);
+                }
+            });
+
+            var markers = names.map(function (name) {
+                return _this.markerLookup.get(name);
+            });
+
+            markers.forEach(function (marker) {
+                marker.setIcon(MapConstants.nullIcon);
+            });
+
+            this.currentNullMarkers = markers;
+        };
         return MapView;
     })();
     CommutesAndRent.MapView = MapView;
@@ -165,6 +200,7 @@ var CommutesAndRent;
         MapConstants.defaultIcon = L.icon({ iconUrl: "default-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
         MapConstants.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
         MapConstants.destinationIcon = L.icon({ iconUrl: "destination-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+        MapConstants.nullIcon = L.icon({ iconUrl: "null-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
 
         MapConstants.locationDataPath = "preprocessor-output/processed-locations/locations.json";
         return MapConstants;
