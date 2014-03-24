@@ -10,8 +10,16 @@ html, body, #app {
 
 #map-and-controls {
     position: fixed;
+    height: 95%;
+    width: 45%;
+    margin: 10px;
+}
+
+#map-and-controls-placeholder {
+    float: left;
     height: 100%;
-    width: 50%;
+    width: 45%;
+    margin: 10px;
 }
 
 #controls {
@@ -34,8 +42,16 @@ html, body, #app {
 
 #chart-holder {
     height: 100%;
-    float: right;
+    float: left;
     width: 50%;
+    margin: 10px;
+}
+
+.axis path {
+    stroke-width: 1;
+    fill: none;
+    stroke: #aaa;
+    shape-rendering: crispEdges;
 }
 
 .bargroup .background {
@@ -51,6 +67,10 @@ html, body, #app {
 
 .bargroup .median {
     stroke: black;
+}
+
+.bargroup .label {
+    font-size: 11px;
 }
 
 /* Transition classes */

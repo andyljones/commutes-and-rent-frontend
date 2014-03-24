@@ -38,7 +38,7 @@ var CommutesAndRent;
                 return _this.model.propertyFile = SliderConstants.rentFilenames[value];
             });
 
-            var scale = d3.scale.ordinal().domain(d3.range(0, SliderConstants.propertyTypes.length - 1, 1)).rangePoints([0, $("#timeslider").width()]);
+            var scale = d3.scale.ordinal().domain(d3.range(0, SliderConstants.propertyTypes.length - 1, 1)).rangePoints([0, $("#bedroomslider").width()]);
 
             var axis = d3.svg.axis().scale(scale).tickValues(d3.range(0, SliderConstants.propertyTypes.length, 1)).tickFormat(function (d) {
                 return SliderConstants.propertyTypes[d];
@@ -648,7 +648,7 @@ var CommutesAndRent;
             var _this = this;
             return {
                 transform: function (d) {
-                    return "translate(0," + _this.yScale(_this.offset(d, expandedTime)) + ")";
+                    return "translate(0," + _this.yScale(_this.offset(d, expandedTime) - 0.5) + ")";
                 }
             };
         };
@@ -675,10 +675,10 @@ var CommutesAndRent;
             var _this = this;
             return {
                 x: function () {
-                    return _this.chartWidth - ChartConstants.margins.right;
+                    return _this.chartWidth - ChartConstants.margins.right + ChartConstants.xLabelOffset;
                 },
                 y: function () {
-                    return ChartConstants.pixelsPerMinute - ChartConstants.barSpacing;
+                    return ChartConstants.pixelsPerMinute - ChartConstants.barSpacing - ChartConstants.yLabelOffset;
                 }
             };
         };
@@ -753,6 +753,9 @@ var CommutesAndRent;
 
         ChartConstants.xAxisOffset = 40;
         ChartConstants.yAxisOffset = 40;
+
+        ChartConstants.yLabelOffset = 3;
+        ChartConstants.xLabelOffset = 10;
         return ChartConstants;
     })();
 })(CommutesAndRent || (CommutesAndRent = {}));

@@ -54,7 +54,7 @@ module CommutesAndRent {
 
             var scale = d3.scale.ordinal()
                 .domain(d3.range(0, SliderConstants.propertyTypes.length - 1, 1))
-                .rangePoints([0, $("#timeslider").width()]);
+                .rangePoints([0, $("#bedroomslider").width()]);
 
             var axis = d3.svg.axis()
                 .scale(scale)
@@ -545,7 +545,7 @@ module CommutesAndRent {
 
         public groupPositionAttrs(expandedTime: number): any {
             return {
-                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")"
+                transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime) - 0.5) + ")"
             };
         }
 
@@ -570,8 +570,8 @@ module CommutesAndRent {
 
         public labelAttrs(): any {
             return {
-                x: () => this.chartWidth - ChartConstants.margins.right,
-                y: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing
+                x: () => this.chartWidth - ChartConstants.margins.right + ChartConstants.xLabelOffset,
+                y: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing - ChartConstants.yLabelOffset
             };
         }
 
@@ -643,6 +643,9 @@ module CommutesAndRent {
 
         public static xAxisOffset: number = 40;
         public static yAxisOffset: number = 40;
+
+        public static yLabelOffset: number = 3;
+        public static xLabelOffset: number = 10;
     }
 
 }
