@@ -213,7 +213,7 @@ var CommutesAndRent;
         ChartController.prototype.initialize = function () {
             var _this = this;
             this.view = new CommutesAndRent.ChartView(this.model);
-            d3.selectAll(".rent.g").on("mouseover", function (d) {
+            d3.selectAll(".bar.g").on("mouseover", function (d) {
                 _this.notifyAndHighlight(d.name);
             });
         };
@@ -265,15 +265,17 @@ var CommutesAndRent;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = this.svg.selectAll(".rent.g").data(dataset).enter().append("g").on('click', function (d) {
+            var selection = this.svg.selectAll(".bar.g").data(dataset).enter().append("g").on('click', function (d) {
                 return _this.expandTime(d.time);
-            }).attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+            }).attr(this.graphics.groupPositionAttrs(null)).classed("bar", true).classed("g", true).classed("highlighted", function (d) {
+                return d.name === _this.currentlyHighlighted;
+            });
 
-            selection.append("rect").attr(this.graphics.backgroundAttrs(null));
+            selection.append("rect").classed("bar", true).classed("background", true).attr(this.graphics.backgroundAttrs(null));
 
-            selection.append("rect").attr(this.graphics.barAttrs());
+            selection.append("rect").classed("bar", true).classed("rect", true).attr(this.graphics.rectAttrs());
 
-            selection.append("text").attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
+            selection.append("text").classed("bar", true).classed("label", true).attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
         };
 
         ChartView.prototype.update = function () {
@@ -281,35 +283,37 @@ var CommutesAndRent;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
             this.graphics = new CommutesAndRent.Graphics(dataset);
 
-            var selection = d3.selectAll(".rent.g").data(dataset, function (rentTime) {
+            var selection = d3.selectAll(".bar.g").data(dataset, function (rentTime) {
                 return rentTime.name;
             });
 
             selection.on('click', function (d) {
                 return _this.expandTime(d.time);
-            }).transition().attr(this.graphics.normalPositionAttrs()).attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+            }).attr(this.graphics.groupPositionAttrs(null)).classed("highlighted", function (d) {
+                return d.name === _this.currentlyHighlighted;
+            });
 
-            selection.select(".rent.rect").transition().attr(this.graphics.barAttrs());
+            selection.select(".bar.rect").attr(this.graphics.rectAttrs());
 
-            selection.select(".rent.background").transition().attr(this.graphics.backgroundAttrs(null));
+            selection.select(".bar.background").attr(this.graphics.backgroundAttrs(null));
 
-            selection.select(".rent.text").transition().attr(this.graphics.normalLabelAttrs()).text(this.graphics.normalLabelText());
+            selection.select(".bar.label").attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
 
             this.currentlyExpanded = null;
         };
 
         ChartView.prototype.expandTime = function (time) {
-            var selection = this.svg.selectAll(".rent.g");
+            var selection = this.svg.selectAll(".bar.g");
 
             if (time === this.currentlyExpanded) {
-                selection.transition().attr(this.graphics.normalPositionAttrs());
-                selection.select(".rent.background").attr(this.graphics.backgroundAttrs(null));
-                selection.select(".rent.text").text(this.graphics.normalLabelText());
+                selection.attr(this.graphics.groupPositionAttrs(null));
+                selection.select(".bar.background").attr(this.graphics.backgroundAttrs(null));
+                selection.select(".bar.label").text(this.graphics.labelText(null));
                 this.currentlyExpanded = null;
             } else {
-                selection.transition().attr(this.graphics.expandedPositionAttrs(time));
-                selection.select(".rent.background").attr(this.graphics.backgroundAttrs(time));
-                selection.select(".rent.text").text(this.graphics.expandedLabelText(time));
+                selection.attr(this.graphics.groupPositionAttrs(time));
+                selection.select(".bar.background").attr(this.graphics.backgroundAttrs(time));
+                selection.select(".bar.label").text(this.graphics.labelText(time));
                 this.currentlyExpanded = time;
             }
         };
@@ -327,9 +331,12 @@ var CommutesAndRent;
         };
 
         ChartView.prototype.highlightStation = function (name) {
+            var _this = this;
             this.currentlyHighlighted = name;
 
-            var selection = d3.selectAll(".rent.g").attr(this.graphics.colorAttrs(this.currentlyHighlighted));
+            var selection = d3.selectAll(".bar.g").classed("highlighted", function (d) {
+                return d.name === _this.currentlyHighlighted;
+            });
 
             // Bring selected node to the front:
             selection.sort(function (a, b) {
@@ -382,7 +389,7 @@ var CommutesAndRent;
             AxisBuilders.makeXAxis(this.xScale);
             AxisBuilders.makeYAxis(this.yScale);
 
-            this.calculateOffsets(dataset);
+            this.calculatePositions(dataset);
 
             Graphics.setChartHeight(dataset);
         }
@@ -395,7 +402,7 @@ var CommutesAndRent;
             $("#chart").height(ChartConstants.pixelsPerMinute * range);
         };
 
-        Graphics.prototype.calculateOffsets = function (dataset) {
+        Graphics.prototype.calculatePositions = function (dataset) {
             var sorted = dataset.sort(function (a, b) {
                 return a.median - b.median;
             });
@@ -415,21 +422,9 @@ var CommutesAndRent;
             }
         };
 
-        Graphics.prototype.colorAttrs = function (highlighted) {
-            return {
-                fill: function (d) {
-                    return d.name === highlighted ? "orange" : "blue";
-                },
-                opacity: function (d) {
-                    return d.name === highlighted ? 1 : 0.4;
-                }
-            };
-        };
-
-        Graphics.prototype.barAttrs = function () {
+        Graphics.prototype.rectAttrs = function () {
             var _this = this;
             return {
-                "class": "rent rect",
                 x: function (d) {
                     return _this.xScale(d.lowerQuartile);
                 },
@@ -442,17 +437,7 @@ var CommutesAndRent;
             };
         };
 
-        Graphics.prototype.normalPositionAttrs = function () {
-            var _this = this;
-            return {
-                transform: function (d) {
-                    return "translate(0," + _this.yScale(d.time) + ")";
-                },
-                "class": "rent g"
-            };
-        };
-
-        Graphics.prototype.expandedPositionAttrs = function (expandedTime) {
+        Graphics.prototype.groupPositionAttrs = function (expandedTime) {
             var _this = this;
             return {
                 transform: function (d) {
@@ -463,14 +448,11 @@ var CommutesAndRent;
 
         Graphics.prototype.backgroundAttrs = function (expandedTime) {
             return {
-                "class": "rent background",
                 x: ChartConstants.margins.left,
                 width: this.chartWidth - ChartConstants.margins.left,
                 height: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
-                "fill": "black",
-                "stroke-width": 0,
-                opacity: function (d) {
-                    return d.time === expandedTime ? 0.2 : 0;
+                visibility: function (d) {
+                    return d.time === expandedTime ? "visible" : "hidden";
                 },
                 "pointer-events": function (d) {
                     return d.time === expandedTime ? "auto" : "none";
@@ -478,10 +460,9 @@ var CommutesAndRent;
             };
         };
 
-        Graphics.prototype.normalLabelAttrs = function () {
+        Graphics.prototype.labelAttrs = function () {
             var _this = this;
             return {
-                "class": "rent text",
                 x: function () {
                     return _this.chartWidth - ChartConstants.margins.right;
                 },
@@ -491,23 +472,10 @@ var CommutesAndRent;
             };
         };
 
-        Graphics.prototype.expandedLabelText = function (expandedTime) {
+        Graphics.prototype.labelText = function (expandedTime) {
             var _this = this;
             return function (d) {
                 if (d.time === expandedTime || (_this.indices[d.name] === 0 && _this.sizes[d.time] === 1)) {
-                    return d.name;
-                } else if (_this.indices[d.name] === 0 && _this.sizes[d.time] > 1) {
-                    return "+";
-                } else {
-                    return "";
-                }
-            };
-        };
-
-        Graphics.prototype.normalLabelText = function () {
-            var _this = this;
-            return function (d) {
-                if (_this.indices[d.name] === 0 && _this.sizes[d.time] === 1) {
                     return d.name;
                 } else if (_this.indices[d.name] === 0 && _this.sizes[d.time] > 1) {
                     return "+";

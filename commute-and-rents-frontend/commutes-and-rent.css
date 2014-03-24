@@ -37,3 +37,18 @@ html, body, #app {
     float: right;
     width: 50%;
 }
+
+.bar.background {
+    fill: gainsboro;
+    stroke-width: 0;
+}
+
+.bar.rect {
+    fill: navy;
+    opacity: 0.4;
+}
+
+.highlighted .rect, .highlighted .label {
+    fill: darkorange;
+    opacity: 1;
+}
