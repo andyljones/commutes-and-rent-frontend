@@ -273,7 +273,7 @@ module CommutesAndRent {
         }
 
         private initialize(): void {
-            var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
             var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g")
                 .classed("bargroup", true);
@@ -292,7 +292,7 @@ module CommutesAndRent {
 
         private update(dataset?: RentTime[]): void {
             if (typeof dataset === "undefined") {
-                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
             }
 
             this.graphics = new Graphics(dataset);
@@ -308,7 +308,7 @@ module CommutesAndRent {
                 .attr(this.graphics.rectAttrs());
 
             selection.select(".background")
-                .attr(this.graphics.backgroundAttrs(null));
+                .attr(this.graphics.backgroundAttrs());
 
             selection.select(".label")
                 .attr(this.graphics.labelAttrs())
@@ -332,7 +332,6 @@ module CommutesAndRent {
             selection.classed("notexpanded", d => (time !== null) && (d.time !== time));
 
             selection.attr(this.graphics.groupPositionAttrs(time));
-            selection.select(".background").attr(this.graphics.backgroundAttrs(time));
             selection.select(".label").text(this.graphics.labelText(time));
 
             d3.select(".y.axis").classed("suppressed", time !== null);
@@ -340,8 +339,8 @@ module CommutesAndRent {
             this.currentlyExpanded = time;
         }
 
-        private static generateDataset(rents: RentStatistic[], departures: DepartureTime[]) {
-            var departureLookup: D3.Map = departures.reduce((m: D3.Map, d: DepartureTime) => { m.set(d.station, d.time); return m; }, d3.map());
+        private static generateDataset(rents: RentStatistic[], commutes: CommuteTimes) {
+            var departureLookup: D3.Map = commutes.times.reduce((m: D3.Map, d: DepartureTime) => { m.set(d.station, commutes.arrivalTime - d.time); return m; }, d3.map());
             var rentTimes: RentTime[] = rents.map(rent => new RentTime(rent, departureLookup.get(rent.name)));
 
             return rentTimes;
@@ -454,7 +453,19 @@ module CommutesAndRent {
             };
         }
 
-        public backgroundAttrs(expandedTime: number): any {
+        private offset(d: RentTime, expandedTime: number): number {
+
+            if (expandedTime === null || d.time < expandedTime) {
+                return d.time;
+            }
+            else if (d.time === expandedTime) {
+                return d.time + this.indices[d.name];
+            } else {
+                return d.time + (this.sizes[expandedTime] - 1);
+            }
+        }
+
+        public backgroundAttrs(): any {
             return {
                 x: ChartConstants.margins.left,
                 width: this.chartWidth - ChartConstants.margins.left,
@@ -480,18 +491,6 @@ module CommutesAndRent {
                 }
             };
         }
-
-        private offset(d: RentTime, expandedTime: number): number {
-            if (d.time < expandedTime) {
-                return d.time - (this.sizes[expandedTime] - 1);
-            }
-            else if (d.time === expandedTime) {
-                return d.time - this.indices[d.name];
-            }
-            else {
-                return d.time;
-            }
-        }
     }
 
     class ScaleBuilders {
@@ -510,7 +509,7 @@ module CommutesAndRent {
             var range: number = d3.max(times) - d3.min(times);
 
             return d3.scale.linear()
-                .domain([d3.max(times), d3.min(times)])
+                .domain([0, d3.max(times)])
                 .range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]);
         }
     }

@@ -261,7 +261,7 @@ var CommutesAndRent;
             this.initialize();
         }
         ChartView.prototype.initialize = function () {
-            var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+            var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
             var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g").classed("bargroup", true);
 
@@ -277,7 +277,7 @@ var CommutesAndRent;
         ChartView.prototype.update = function (dataset) {
             var _this = this;
             if (typeof dataset === "undefined") {
-                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes.times);
+                dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
             }
 
             this.graphics = new CommutesAndRent.Graphics(dataset);
@@ -294,7 +294,7 @@ var CommutesAndRent;
 
             selection.select(".rect").attr(this.graphics.rectAttrs());
 
-            selection.select(".background").attr(this.graphics.backgroundAttrs(null));
+            selection.select(".background").attr(this.graphics.backgroundAttrs());
 
             selection.select(".label").attr(this.graphics.labelAttrs()).text(this.graphics.labelText(null));
 
@@ -320,7 +320,6 @@ var CommutesAndRent;
             });
 
             selection.attr(this.graphics.groupPositionAttrs(time));
-            selection.select(".background").attr(this.graphics.backgroundAttrs(time));
             selection.select(".label").text(this.graphics.labelText(time));
 
             d3.select(".y.axis").classed("suppressed", time !== null);
@@ -328,9 +327,9 @@ var CommutesAndRent;
             this.currentlyExpanded = time;
         };
 
-        ChartView.generateDataset = function (rents, departures) {
-            var departureLookup = departures.reduce(function (m, d) {
-                m.set(d.station, d.time);
+        ChartView.generateDataset = function (rents, commutes) {
+            var departureLookup = commutes.times.reduce(function (m, d) {
+                m.set(d.station, commutes.arrivalTime - d.time);
                 return m;
             }, d3.map());
             var rentTimes = rents.map(function (rent) {
@@ -456,7 +455,17 @@ var CommutesAndRent;
             };
         };
 
-        Graphics.prototype.backgroundAttrs = function (expandedTime) {
+        Graphics.prototype.offset = function (d, expandedTime) {
+            if (expandedTime === null || d.time < expandedTime) {
+                return d.time;
+            } else if (d.time === expandedTime) {
+                return d.time + this.indices[d.name];
+            } else {
+                return d.time + (this.sizes[expandedTime] - 1);
+            }
+        };
+
+        Graphics.prototype.backgroundAttrs = function () {
             return {
                 x: ChartConstants.margins.left,
                 width: this.chartWidth - ChartConstants.margins.left,
@@ -488,16 +497,6 @@ var CommutesAndRent;
                 }
             };
         };
-
-        Graphics.prototype.offset = function (d, expandedTime) {
-            if (d.time < expandedTime) {
-                return d.time - (this.sizes[expandedTime] - 1);
-            } else if (d.time === expandedTime) {
-                return d.time - this.indices[d.name];
-            } else {
-                return d.time;
-            }
-        };
         return Graphics;
     })();
     CommutesAndRent.Graphics = Graphics;
@@ -522,7 +521,7 @@ var CommutesAndRent;
             });
             var range = d3.max(times) - d3.min(times);
 
-            return d3.scale.linear().domain([d3.max(times), d3.min(times)]).range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]);
+            return d3.scale.linear().domain([0, d3.max(times)]).range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]);
         };
         return ScaleBuilders;
     })();
