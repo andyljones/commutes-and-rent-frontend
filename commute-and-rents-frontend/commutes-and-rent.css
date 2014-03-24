@@ -50,7 +50,22 @@ html, body, #app {
 
 /* Transition classes */
 
-.bargroup.expanded .rect, .bargroup.expanded .median {
+.bargroup.destination .rect, .bargroup.destination .label {
+    fill: green;
+    opacity: 1;
+}
+
+.bargroup.nulldata .rect, .bargroup.nulldata .label {
+    fill: firebrick;
+    opacity: 0.1;
+}
+
+.bargroup.highlighted .rect, .bargroup.highlighted .label {
+    fill: darkorange;
+    opacity: 1;
+}
+
+.bargroup.expanded .rect, .bargroup.expanded .label, .bargroup.expanded .median {
     opacity: 1;
 }
 
@@ -67,16 +82,6 @@ html, body, #app {
 
 .y.axis.suppressed {
     opacity: 0.1;
-}
-
-.bargroup.highlighted .rect, .bargroup.highlighted .label {
-    fill: darkorange;
-    opacity: 1;
-}
-
-.bargroup.destination .rect, .bargroup.destination .label {
-    fill: green;
-    opacity: 1;
 }
 
 .bargroup .median {

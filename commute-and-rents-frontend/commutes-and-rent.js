@@ -385,6 +385,10 @@ var CommutesAndRent;
             selection.select(".background").attr(this.graphics.backgroundAttrs());
             selection.select(".label").attr(this.graphics.labelAttrs());
 
+            selection.classed("nulldata", function (d) {
+                return d.median === null;
+            });
+
             this.expandOrCollapseTime(null);
             this.highlightStation(this.model.highlighted);
             this.highlightDestination(this.model.destination);
@@ -515,13 +519,13 @@ var CommutesAndRent;
             var _this = this;
             return {
                 x: function (d) {
-                    return _this.xScale(d.lowerQuartile);
+                    return d.median !== null ? _this.xScale(d.lowerQuartile) : ChartConstants.margins.left;
                 },
                 height: function () {
                     return ChartConstants.pixelsPerMinute - ChartConstants.barSpacing;
                 },
                 width: function (d) {
-                    return _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile);
+                    return d.median !== null ? _this.xScale(d.upperQuartile) - _this.xScale(d.lowerQuartile) : _this.chartWidth - (ChartConstants.margins.right + ChartConstants.margins.left);
                 }
             };
         };

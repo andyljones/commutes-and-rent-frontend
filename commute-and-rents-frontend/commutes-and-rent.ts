@@ -316,6 +316,8 @@ module CommutesAndRent {
             selection.select(".background").attr(this.graphics.backgroundAttrs());
             selection.select(".label").attr(this.graphics.labelAttrs());
 
+            selection.classed("nulldata", d => d.median === null);
+
             this.expandOrCollapseTime(null);
             this.highlightStation(this.model.highlighted);
             this.highlightDestination(this.model.destination);
@@ -437,9 +439,9 @@ module CommutesAndRent {
 
         public rectAttrs(): any {
             return {
-                x: (d: RentTime) => this.xScale(d.lowerQuartile),
+                x: (d: RentTime) => d.median !== null? this.xScale(d.lowerQuartile) : ChartConstants.margins.left,
                 height: () => ChartConstants.pixelsPerMinute - ChartConstants.barSpacing,
-                width: (d: RentTime) => this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile)
+                width: (d: RentTime) => d.median !== null ? this.xScale(d.upperQuartile) - this.xScale(d.lowerQuartile) : this.chartWidth - (ChartConstants.margins.right + ChartConstants.margins.left)
             };
         }
 
