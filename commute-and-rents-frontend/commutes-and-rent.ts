@@ -296,6 +296,7 @@ module CommutesAndRent {
 
             selection.append("rect").classed("background", true);
             selection.append("rect").classed("rect", true);
+            selection.append("line").classed("median", true);
             selection.append("text").classed("label", true);
 
             this.update(dataset);
@@ -311,6 +312,7 @@ module CommutesAndRent {
             var selection = d3.selectAll(".bargroup").data(dataset, rentTime => rentTime.name);
 
             selection.select(".rect").attr(this.graphics.rectAttrs());
+            selection.select(".median").attr(this.graphics.medianAttrs());
             selection.select(".background").attr(this.graphics.backgroundAttrs());
             selection.select(".label").attr(this.graphics.labelAttrs());
 
@@ -441,6 +443,15 @@ module CommutesAndRent {
             };
         }
 
+        public medianAttrs(): any {
+            return {
+                x1: (d: RentTime) => this.xScale(d.median),
+                y1: 0,
+                x2: (d: RentTime) => this.xScale(d.median),
+                y2: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing
+            };
+        }
+
         public groupPositionAttrs(expandedTime: number): any {
             return {
                 transform: (d: RentTime) => "translate(0," + this.yScale(this.offset(d, expandedTime)) + ")"
@@ -503,7 +514,8 @@ module CommutesAndRent {
 
             return d3.scale.linear()
                 .domain([0, d3.max(times)])
-                .range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]);
+                .range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom])
+                .nice();
         }
     }
 

@@ -43,18 +43,18 @@ html, body, #app {
     pointer-events: none;
 }
 
-.bargroup .rect {
+.bargroup .rect, .bargroup .median {
     fill: navy;
     opacity: 0.4;
 }
 
 /* Transition classes */
 
-.bargroup.expanded .rect {
+.bargroup.expanded .rect, .bargroup.expanded .median {
     opacity: 1;
 }
 
-.bargroup.notexpanded .rect, .bargroup.notexpanded .label {
+.bargroup.notexpanded .rect, .bargroup.notexpanded .label, .bargroup.notexpanded .median {
     opacity: 0.1;
 }
 
@@ -77,4 +77,8 @@ html, body, #app {
 .bargroup.destination .rect, .bargroup.destination .label {
     fill: green;
     opacity: 1;
+}
+
+.bargroup .median {
+    stroke: black;
 }

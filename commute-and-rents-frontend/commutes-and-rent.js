@@ -363,6 +363,7 @@ var CommutesAndRent;
 
             selection.append("rect").classed("background", true);
             selection.append("rect").classed("rect", true);
+            selection.append("line").classed("median", true);
             selection.append("text").classed("label", true);
 
             this.update(dataset);
@@ -380,6 +381,7 @@ var CommutesAndRent;
             });
 
             selection.select(".rect").attr(this.graphics.rectAttrs());
+            selection.select(".median").attr(this.graphics.medianAttrs());
             selection.select(".background").attr(this.graphics.backgroundAttrs());
             selection.select(".label").attr(this.graphics.labelAttrs());
 
@@ -524,6 +526,20 @@ var CommutesAndRent;
             };
         };
 
+        Graphics.prototype.medianAttrs = function () {
+            var _this = this;
+            return {
+                x1: function (d) {
+                    return _this.xScale(d.median);
+                },
+                y1: 0,
+                x2: function (d) {
+                    return _this.xScale(d.median);
+                },
+                y2: ChartConstants.pixelsPerMinute - ChartConstants.barSpacing
+            };
+        };
+
         Graphics.prototype.groupPositionAttrs = function (expandedTime) {
             var _this = this;
             return {
@@ -599,7 +615,7 @@ var CommutesAndRent;
             });
             var range = d3.max(times) - d3.min(times);
 
-            return d3.scale.linear().domain([0, d3.max(times)]).range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]);
+            return d3.scale.linear().domain([0, d3.max(times)]).range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]).nice();
         };
         return ScaleBuilders;
     })();
