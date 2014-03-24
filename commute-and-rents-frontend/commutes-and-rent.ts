@@ -8,11 +8,8 @@ module CommutesAndRent {
         
     export class SlidersController {
 
-        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
-
         private model: Model;
 
-        //TODO: Defaults are currently in the controller.
         constructor(model: Model) {
             this.model = model;
 
@@ -24,6 +21,7 @@ module CommutesAndRent {
             var slider: any = d3slider()
                 .axis(true)
                 .min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime)
+                .value(SliderConstants.minutesToHours(this.model.arrivalTime))
                 .on("slide", (event, value) => this.model.arrivalTime = SliderConstants.hoursToMinutes(value));
 
             d3.select("#timeslider").call(slider);
@@ -33,6 +31,7 @@ module CommutesAndRent {
             var slider: any = d3slider()
                 .axis(true)
                 .min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom)
+                .value(this.model.bedroomCount)
                 .on("slide", (event, value) => this.model.bedroomCount = value);
 
             d3.select("#bedroomslider").call(slider);
@@ -45,6 +44,7 @@ module CommutesAndRent {
         public static maxTime: number = 24;
         public static stepTime: number = 1;
         public static hoursToMinutes: (number) => number = n => 60 * (n - 1);
+        public static minutesToHours: (number) => number = n => n/60 + 1;
 
         public static minBedroom: number = 1;
         public static maxBedroom: number = 4;
@@ -194,13 +194,6 @@ module CommutesAndRent {
         private map: MapView;
         private sliders: SlidersController;
 
-        private static defaultArrivalTime: number = 480;
-        private static defaultDestination: string = "Barbican";
-        private static defaultNumberOfBedrooms: number  = 1;
-
-        private static rentStatsFolder: string = "preprocessor-output/processed-rents/";
-        private static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
-
         constructor() { 
             this.initializeModel()
                 .then(model => {
@@ -215,29 +208,40 @@ module CommutesAndRent {
         private initializeModel(): Q.Promise<Model> {
             var model = new Model();
 
+            model.arrivalTime = ControllerConstants.defaultArrivalTime;
+            model.destination = ControllerConstants.defaultDestination;
+            model.bedroomCount = ControllerConstants.defaultNumberOfBedrooms;
+            
             return Q.all([
-                this.loadRentData(model, Controller.defaultNumberOfBedrooms),
-                this.loadCommuteData(model, Controller.defaultArrivalTime, Controller.defaultDestination)
+                this.loadRentData(model),
+                this.loadCommuteData(model)
             ]).then(() => Q(model));
         }
 
-        private loadCommuteData(model: Model, time: number, stationName: string): Q.Promise<void> {
-            var filepath: string = Controller.departureTimesFolder + time + "/" + stationName + ".json";
-
+        private loadCommuteData(model: Model): Q.Promise<void> {
+            var filepath: string = ControllerConstants.departureTimesFolder + model.arrivalTime + "/" + model.destination + ".json";
             return Q($.getJSON(filepath)).then(data => { model.commutes = data; return null; });
         }
 
-        private loadRentData(model: Model, numberOfBedrooms: number): Q.Promise<void> {
-            var filepath: string = Controller.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-
+        private loadRentData(model: Model): Q.Promise<void> {
+            var filepath: string = ControllerConstants.rentStatsFolder + model.bedroomCount + "-bedroom-rents.json";
             return Q($.getJSON(filepath)).then(data => { model.rents = data; return null; });
         }
 
         private initializeSelf(model: Model): void {
-            model.destinationListeners.push(name => this.loadCommuteData(this.model, this.model.commutes.arrivalTime, name));
-            model.arrivalTimeListeners.push(time => this.loadCommuteData(this.model, time, this.model.commutes.destination));
-            model.bedroomCountListeners.push(count => this.loadRentData(this.model, count));
+            model.destinationListeners.push(name => this.loadCommuteData(model));
+            model.arrivalTimeListeners.push(time => this.loadCommuteData(model));
+            model.bedroomCountListeners.push(count => this.loadRentData(model));
         }
+    }
+
+    class ControllerConstants {
+        public static defaultArrivalTime: number = 480;
+        public static defaultDestination: string = "Barbican";
+        public static defaultNumberOfBedrooms: number = 2;
+        
+        public static rentStatsFolder: string = "preprocessor-output/processed-rents/";
+        public static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
     }
 }
 
@@ -245,8 +249,6 @@ module CommutesAndRent {
 
     export class ChartView {
         private model: Model;
-
-        private svg: D3.Selection;
 
         private graphics: Graphics;
 
@@ -259,15 +261,13 @@ module CommutesAndRent {
             model.dataUpdateListeners.push(() => this.update());
             model.highlightListeners.push(name => this.highlightStation(name));
 
-            this.svg = d3.select("#chart");
-
             this.initialize();
         }
 
         private initialize(): void {
             var dataset: RentTime[] = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g");
+            var selection = d3.select("#chart").selectAll(".bargroup").data(dataset).enter().append("g");
 
             selection
                 .classed("bargroup", true)
@@ -307,7 +307,7 @@ module CommutesAndRent {
         }
 
         private expandTime(time: number): void {
-            var selection = this.svg.selectAll(".bargroup");
+            var selection = d3.selectAll(".bargroup");
 
             selection.classed("expanded", d => d.time === time);
             selection.classed("notexpanded", d => (time !== null) && (d.time !== time));
@@ -355,9 +355,6 @@ module CommutesAndRent {
             this.time = time;
         }
     }
-}
-
-module CommutesAndRent {
 
     export class Graphics {
 
@@ -390,13 +387,13 @@ module CommutesAndRent {
             $("#chart").height(ChartConstants.pixelsPerMinute*range);
         }
 
+        //TODO: This is awful.
         private calculateYOffsets(dataset: RentTime[]): void {
             var sorted = dataset.sort((a, b) => a.median - b.median);
 
             for (var i: number = 0; i < dataset.length; i++) {
 
                 var item = sorted[i];
-
                 var count = this.sizes[item.time];
 
                 if (typeof count === "number") {
@@ -424,7 +421,6 @@ module CommutesAndRent {
         }
 
         private offset(d: RentTime, expandedTime: number): number {
-
             if (expandedTime === null || d.time < expandedTime) {
                 return d.time;
             }
@@ -505,7 +501,7 @@ module CommutesAndRent {
         }
     }
 
-    export class ChartConstants {
+    class ChartConstants {
 
         public static pixelsPerMinute: number = 15;
         public static barSpacing: number = 2;

@@ -11,7 +11,6 @@ window.onload = function () {
 var CommutesAndRent;
 (function (CommutesAndRent) {
     var SlidersController = (function () {
-        //TODO: Defaults are currently in the controller.
         function SlidersController(model) {
             this.model = model;
 
@@ -20,7 +19,7 @@ var CommutesAndRent;
         }
         SlidersController.prototype.makeTimeSlider = function () {
             var _this = this;
-            var slider = d3slider().axis(true).min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime).on("slide", function (event, value) {
+            var slider = d3slider().axis(true).min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime).value(SliderConstants.minutesToHours(this.model.arrivalTime)).on("slide", function (event, value) {
                 return _this.model.arrivalTime = SliderConstants.hoursToMinutes(value);
             });
 
@@ -29,13 +28,12 @@ var CommutesAndRent;
 
         SlidersController.prototype.makeBedroomCountSlider = function () {
             var _this = this;
-            var slider = d3slider().axis(true).min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom).on("slide", function (event, value) {
+            var slider = d3slider().axis(true).min(SliderConstants.minBedroom).max(SliderConstants.maxBedroom).step(SliderConstants.stepBedroom).value(this.model.bedroomCount).on("slide", function (event, value) {
                 return _this.model.bedroomCount = value;
             });
 
             d3.select("#bedroomslider").call(slider);
         };
-        SlidersController.departureTimesFolder = "preprocessor-output/processed-departure-times/";
         return SlidersController;
     })();
     CommutesAndRent.SlidersController = SlidersController;
@@ -48,6 +46,9 @@ var CommutesAndRent;
         SliderConstants.stepTime = 1;
         SliderConstants.hoursToMinutes = function (n) {
             return 60 * (n - 1);
+        };
+        SliderConstants.minutesToHours = function (n) {
+            return n / 60 + 1;
         };
 
         SliderConstants.minBedroom = 1;
@@ -253,26 +254,28 @@ var CommutesAndRent;
         Controller.prototype.initializeModel = function () {
             var model = new CommutesAndRent.Model();
 
+            model.arrivalTime = ControllerConstants.defaultArrivalTime;
+            model.destination = ControllerConstants.defaultDestination;
+            model.bedroomCount = ControllerConstants.defaultNumberOfBedrooms;
+
             return Q.all([
-                this.loadRentData(model, Controller.defaultNumberOfBedrooms),
-                this.loadCommuteData(model, Controller.defaultArrivalTime, Controller.defaultDestination)
+                this.loadRentData(model),
+                this.loadCommuteData(model)
             ]).then(function () {
                 return Q(model);
             });
         };
 
-        Controller.prototype.loadCommuteData = function (model, time, stationName) {
-            var filepath = Controller.departureTimesFolder + time + "/" + stationName + ".json";
-
+        Controller.prototype.loadCommuteData = function (model) {
+            var filepath = ControllerConstants.departureTimesFolder + model.arrivalTime + "/" + model.destination + ".json";
             return Q($.getJSON(filepath)).then(function (data) {
                 model.commutes = data;
                 return null;
             });
         };
 
-        Controller.prototype.loadRentData = function (model, numberOfBedrooms) {
-            var filepath = Controller.rentStatsFolder + numberOfBedrooms + "-bedroom-rents.json";
-
+        Controller.prototype.loadRentData = function (model) {
+            var filepath = ControllerConstants.rentStatsFolder + model.bedroomCount + "-bedroom-rents.json";
             return Q($.getJSON(filepath)).then(function (data) {
                 model.rents = data;
                 return null;
@@ -282,24 +285,30 @@ var CommutesAndRent;
         Controller.prototype.initializeSelf = function (model) {
             var _this = this;
             model.destinationListeners.push(function (name) {
-                return _this.loadCommuteData(_this.model, _this.model.commutes.arrivalTime, name);
+                return _this.loadCommuteData(model);
             });
             model.arrivalTimeListeners.push(function (time) {
-                return _this.loadCommuteData(_this.model, time, _this.model.commutes.destination);
+                return _this.loadCommuteData(model);
             });
             model.bedroomCountListeners.push(function (count) {
-                return _this.loadRentData(_this.model, count);
+                return _this.loadRentData(model);
             });
         };
-        Controller.defaultArrivalTime = 480;
-        Controller.defaultDestination = "Barbican";
-        Controller.defaultNumberOfBedrooms = 1;
-
-        Controller.rentStatsFolder = "preprocessor-output/processed-rents/";
-        Controller.departureTimesFolder = "preprocessor-output/processed-departure-times/";
         return Controller;
     })();
     CommutesAndRent.Controller = Controller;
+
+    var ControllerConstants = (function () {
+        function ControllerConstants() {
+        }
+        ControllerConstants.defaultArrivalTime = 480;
+        ControllerConstants.defaultDestination = "Barbican";
+        ControllerConstants.defaultNumberOfBedrooms = 2;
+
+        ControllerConstants.rentStatsFolder = "preprocessor-output/processed-rents/";
+        ControllerConstants.departureTimesFolder = "preprocessor-output/processed-departure-times/";
+        return ControllerConstants;
+    })();
 })(CommutesAndRent || (CommutesAndRent = {}));
 
 var CommutesAndRent;
@@ -316,15 +325,13 @@ var CommutesAndRent;
                 return _this.highlightStation(name);
             });
 
-            this.svg = d3.select("#chart");
-
             this.initialize();
         }
         ChartView.prototype.initialize = function () {
             var _this = this;
             var dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
-            var selection = this.svg.selectAll(".bargroup").data(dataset).enter().append("g");
+            var selection = d3.select("#chart").selectAll(".bargroup").data(dataset).enter().append("g");
 
             selection.classed("bargroup", true).on('click', function (d) {
                 return _this.expandOrCollapseTime(d.time);
@@ -344,7 +351,7 @@ var CommutesAndRent;
                 dataset = ChartView.generateDataset(this.model.rents, this.model.commutes);
             }
 
-            this.graphics = new CommutesAndRent.Graphics(dataset);
+            this.graphics = new Graphics(dataset);
 
             var selection = d3.selectAll(".bargroup").data(dataset, function (rentTime) {
                 return rentTime.name;
@@ -367,7 +374,7 @@ var CommutesAndRent;
         };
 
         ChartView.prototype.expandTime = function (time) {
-            var selection = this.svg.selectAll(".bargroup");
+            var selection = d3.selectAll(".bargroup");
 
             selection.classed("expanded", function (d) {
                 return d.time === time;
@@ -425,10 +432,7 @@ var CommutesAndRent;
         return RentTime;
     })();
     CommutesAndRent.RentTime = RentTime;
-})(CommutesAndRent || (CommutesAndRent = {}));
 
-var CommutesAndRent;
-(function (CommutesAndRent) {
     var Graphics = (function () {
         function Graphics(dataset) {
             this.sizes = d3.map();
@@ -454,6 +458,7 @@ var CommutesAndRent;
             $("#chart").height(ChartConstants.pixelsPerMinute * range);
         };
 
+        //TODO: This is awful.
         Graphics.prototype.calculateYOffsets = function (dataset) {
             var sorted = dataset.sort(function (a, b) {
                 return a.median - b.median;
@@ -461,7 +466,6 @@ var CommutesAndRent;
 
             for (var i = 0; i < dataset.length; i++) {
                 var item = sorted[i];
-
                 var count = this.sizes[item.time];
 
                 if (typeof count === "number") {
@@ -598,6 +602,5 @@ var CommutesAndRent;
         ChartConstants.yAxisOffset = 40;
         return ChartConstants;
     })();
-    CommutesAndRent.ChartConstants = ChartConstants;
 })(CommutesAndRent || (CommutesAndRent = {}));
 //# sourceMappingURL=commutes-and-rent.js.map
