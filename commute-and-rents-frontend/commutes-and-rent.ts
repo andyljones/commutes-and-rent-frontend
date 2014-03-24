@@ -155,9 +155,9 @@ module CommutesAndRent {
         public static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
         public static defaultZoom: number = 13;
         
-        public static defaultIcon: L.Icon = L.icon({ iconUrl: "default-icon.png" });
-        public static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png" });
-        public static destinationIcon: L.Icon = L.icon({ iconUrl: "destination-icon.png" });
+        public static defaultIcon: L.Icon = L.icon({ iconUrl: "default-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+        public static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+        public static destinationIcon: L.Icon = L.icon({ iconUrl: "destination-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
         
         public static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
     }

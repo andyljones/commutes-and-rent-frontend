@@ -34,6 +34,7 @@
     <Content Include="library\leaflet\leaflet.css" />
     <Content Include="library\leaflet\leaflet.js" />
     <Content Include="library\q\q.js" />
+    <Content Include="shadow-icon.png" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>

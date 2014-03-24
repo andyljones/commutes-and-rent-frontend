@@ -162,9 +162,9 @@ var CommutesAndRent;
         MapConstants.defaultCenter = new L.LatLng(51.505, -0.09);
         MapConstants.defaultZoom = 13;
 
-        MapConstants.defaultIcon = L.icon({ iconUrl: "default-icon.png" });
-        MapConstants.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png" });
-        MapConstants.destinationIcon = L.icon({ iconUrl: "destination-icon.png" });
+        MapConstants.defaultIcon = L.icon({ iconUrl: "default-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+        MapConstants.highlightIcon = L.icon({ iconUrl: "highlighted-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+        MapConstants.destinationIcon = L.icon({ iconUrl: "destination-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
 
         MapConstants.locationDataPath = "preprocessor-output/processed-locations/locations.json";
         return MapConstants;
