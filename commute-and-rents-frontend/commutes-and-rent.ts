@@ -636,7 +636,6 @@ module CommutesAndRent {
     }
 
     class ChartConstants {
-
         public static pixelsPerMinute: number = 15;
         public static barSpacing: number = 2;
 

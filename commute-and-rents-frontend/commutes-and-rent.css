@@ -7,11 +7,22 @@ html, body, #app {
     margin: 0;
 }
 
+#instructions {
+    position: fixed;
+    width: 200px;
+    height: calc(100% - 40px);
+    margin: 10px;
+    padding: 10px;
+    font-size:11px;
+    text-align: justify;
+}
+
 #map-and-controls {
     position: fixed;
-    width: calc(50% - 15px);
+    width: calc(50% - 130px);
     height: calc(100% - 20px);
     margin: 10px;
+    margin-left: 240px;
 }
 
 #controls {
@@ -35,7 +46,7 @@ html, body, #app {
 #chart-holder {
     height: 100%;
     float: right;
-    width: calc(50% - 15px);
+    width: calc(50% - 130px);
     margin: 10px;
 }
 

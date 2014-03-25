@@ -710,7 +710,7 @@ var CommutesAndRent;
                 return stat.upperQuartile;
             });
 
-            return d3.scale.linear().domain([lowestRent, highestRent]).range([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]).nice();
+            return d3.scale.linear().domain([lowestRent, highestRent]).rangeRound([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]).nice();
         };
 
         ScaleBuilders.makeYScale = function (dataset) {
@@ -719,7 +719,7 @@ var CommutesAndRent;
             });
             var range = d3.max(times) - d3.min(times);
 
-            return d3.scale.linear().domain([0, d3.max(times)]).range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]).nice();
+            return d3.scale.linear().domain([0, d3.max(times)]).rangeRound([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]).nice();
         };
         return ScaleBuilders;
     })();
