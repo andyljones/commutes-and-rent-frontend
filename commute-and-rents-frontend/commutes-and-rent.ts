@@ -623,7 +623,22 @@ module CommutesAndRent {
                 .attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")")
                 .transition()
                 .call(axis);
+
+            AxisBuilders.makeXLabel(xScale);
         }
+
+        private static makeXLabel(xScale: D3.Scale.LinearScale): void {
+            if ($(".x.label").length === 0) {
+                var midpoint = (xScale.range()[0] + xScale.range()[1]) / 2;
+
+                d3.select(".x.axis").append("text")
+                    .classed("x label", true)
+                    .attr("transform", "translate(" + midpoint + "," + ChartConstants.xAxisLabelYOffset + ")")
+                    .attr("text-anchor", "middle")
+                    .text("Rent Range (£/month)");
+            }
+        }
+
 
         public static makeYAxis(yScale: D3.Scale.LinearScale): void {
             var axis: D3.Svg.Axis = d3.svg.axis().scale(yScale).orient("left");
@@ -632,6 +647,20 @@ module CommutesAndRent {
                 .attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)")
                 .transition()
                 .call(axis);
+
+            AxisBuilders.makeYLabel(yScale);
+        }
+
+        private static makeYLabel(yScale: D3.Scale.LinearScale): void {
+            if ($(".y.label").length === 0) {
+                var midpoint = (yScale.range()[0] + yScale.range()[1]) / 2;
+
+                d3.select(".y.axis").append("text")
+                    .classed("y label", true)
+                    .attr("transform", "translate(" + ChartConstants.yAxisLabelXOffset + "," + midpoint + "), rotate(-90)")
+                    .attr("text-anchor", "middle")
+                    .text("Commute Time (mins)");
+            }
         }
     }
 
@@ -639,10 +668,13 @@ module CommutesAndRent {
         public static pixelsPerMinute: number = 15;
         public static barSpacing: number = 2;
 
-        public static margins: any = { top: 50, right: 100, bottom: 50, left: 50 };
+        public static margins: any = { top: 50, right: 100, bottom: 50, left: 60 };
 
         public static xAxisOffset: number = 40;
-        public static yAxisOffset: number = 40;
+        public static yAxisOffset: number = 50;
+
+        public static xAxisLabelYOffset: number = -25;
+        public static yAxisLabelXOffset: number = -32;
 
         public static yLabelOffset: number = 3;
         public static xLabelOffset: number = 10;

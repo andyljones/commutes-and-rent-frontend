@@ -5,6 +5,8 @@ html, body, #app {
     height: 100%;
     width: 100%;
     margin: 0;
+    font-size: 11px;
+    font-family: Verdana,Arial,sans-serif;
 }
 
 #instructions {
@@ -31,15 +33,22 @@ html, body, #app {
 }
 
 .slider {
-    width: 90%;
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
+    float: left;
+    width: calc(100% - 220px);
+    margin: 10px;
+}
+
+.slider-label {
+    text-align: right;
+    clear: left;
+    margin: 10px;
+    float: left;
+    width: 100px;
 }
 
 #map {
     width: calc(100% - 20px);
-    height: calc(100% - 120px);
+    height: calc(100% - 100px);
     margin: 10px;
 }
 
@@ -75,10 +84,6 @@ html, body, #app {
     stroke: black;
 }
 
-.bargroup .label {
-    font-size: 11px;
-}
-
 /* Chart transition styling */
 
 .bargroup.destination .rect, .bargroup.destination .label {
@@ -108,8 +113,6 @@ html, body, #app {
 }
 
 .bargroup.expanded .background {
-    opacity: 1;
-    fill: gainsboro;
     stroke-width: 0;
     transition-duration: 0.25s;
 }

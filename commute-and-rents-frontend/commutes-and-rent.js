@@ -733,12 +733,32 @@ var CommutesAndRent;
             });
 
             d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").transition().call(axis);
+
+            AxisBuilders.makeXLabel(xScale);
+        };
+
+        AxisBuilders.makeXLabel = function (xScale) {
+            if ($(".x.label").length === 0) {
+                var midpoint = (xScale.range()[0] + xScale.range()[1]) / 2;
+
+                d3.select(".x.axis").append("text").classed("x label", true).attr("transform", "translate(" + midpoint + "," + ChartConstants.xAxisLabelYOffset + ")").attr("text-anchor", "middle").text("Rent Range (£/month)");
+            }
         };
 
         AxisBuilders.makeYAxis = function (yScale) {
             var axis = d3.svg.axis().scale(yScale).orient("left");
 
             d3.select(".y.axis").attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)").transition().call(axis);
+
+            AxisBuilders.makeYLabel(yScale);
+        };
+
+        AxisBuilders.makeYLabel = function (yScale) {
+            if ($(".y.label").length === 0) {
+                var midpoint = (yScale.range()[0] + yScale.range()[1]) / 2;
+
+                d3.select(".y.axis").append("text").classed("y label", true).attr("transform", "translate(" + ChartConstants.yAxisLabelXOffset + "," + midpoint + "), rotate(-90)").attr("text-anchor", "middle").text("Commute Time (mins)");
+            }
         };
         return AxisBuilders;
     })();
@@ -749,10 +769,13 @@ var CommutesAndRent;
         ChartConstants.pixelsPerMinute = 15;
         ChartConstants.barSpacing = 2;
 
-        ChartConstants.margins = { top: 50, right: 100, bottom: 50, left: 50 };
+        ChartConstants.margins = { top: 50, right: 100, bottom: 50, left: 60 };
 
         ChartConstants.xAxisOffset = 40;
-        ChartConstants.yAxisOffset = 40;
+        ChartConstants.yAxisOffset = 50;
+
+        ChartConstants.xAxisLabelYOffset = -25;
+        ChartConstants.yAxisLabelXOffset = -32;
 
         ChartConstants.yLabelOffset = 3;
         ChartConstants.xLabelOffset = 10;
