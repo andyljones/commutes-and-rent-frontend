@@ -257,6 +257,8 @@ module CommutesAndRent {
         private _commutes: CommuteTimes;
         public get commutes(): CommuteTimes { return this._commutes; }
         public set commutes(value: CommuteTimes) { this._commutes = value; this.dataUpdateListeners.forEach(l => l()); }
+
+        public shortNames: D3.Map = d3.map();
     }
 
     export interface RentStatistic {
@@ -308,7 +310,8 @@ module CommutesAndRent {
 
             return Q.all([
                 this.loadRentData(model),
-                this.loadCommuteData(model)
+                this.loadCommuteData(model),
+                this.loadShortNameData(model)
             ]).then(() => Q(model));
         }
 
@@ -322,11 +325,38 @@ module CommutesAndRent {
             return Q($.getJSON(filepath)).then(data => { model.rents = data; return null; });
         }
 
+        private loadShortNameData(model: Model): Q.Promise<void> {
+            var filepath: string = ControllerConstants.shortnameFile;
+
+            return Q($.getJSON(filepath)).then(data => { model.shortNames = Controller.parseShortNames(data); return null; });
+        }
+
+        private static parseShortNames(data: ShortName[]): D3.Map {
+            var result = d3.map();
+
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+
+                if (d.shortname !== "") {
+                    result.set(d.name, d.shortname);
+                } else {
+                    result.set(d.name, d.name);
+                }
+            }
+
+            return result;
+        }
+
         private initializeSelf(model: Model): void {
             model.destinationListeners.push(() => this.loadCommuteData(model));
             model.arrivalTimeListeners.push(() => this.loadCommuteData(model));
             model.propertyFileListeners.push(() => this.loadRentData(model));
         }
+    }
+
+    interface ShortName {
+        name: string;
+        shortname: string;
     }
 
     class ControllerConstants {
@@ -336,6 +366,8 @@ module CommutesAndRent {
         
         public static rentStatsFolder: string = "preprocessor-output/processed-rents/";
         public static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+
+        public static shortnameFile: string = "short-names.json";
     }
 }
 
@@ -353,6 +385,7 @@ module CommutesAndRent {
             this.model = model;
 
             this.initialize();
+            console.log(model.shortNames);
 
             model.dataUpdateListeners.push(() => this.update());
             model.highlightListeners.push(() => this.highlightStations());
@@ -387,7 +420,7 @@ module CommutesAndRent {
 
         private update(): void {
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
-            this.graphics = new Graphics(this.data);
+            this.graphics = new Graphics(this.data, this.model.shortNames);
 
             var selection = d3.selectAll(".bargroup").data(this.data, rentTime => rentTime.name);
 
@@ -414,8 +447,6 @@ module CommutesAndRent {
         }
 
         private expandTime(time: number): void {
-            console.log(time);
-
             var selection = d3.selectAll(".bargroup");
 
             selection.classed("expanded", d => d.time === time);
@@ -486,8 +517,11 @@ module CommutesAndRent {
 
         private chartWidth: number;
 
-        constructor(dataset: RentTime[]) {
+        private shortnames: D3.Map;
+
+        constructor(dataset: RentTime[], shortnames: D3.Map) {
             this.chartWidth = $("#chart").width();
+            this.shortnames = shortnames;
 
             this.xScale = ScaleBuilders.makeXScale(dataset, this.chartWidth);
             this.yScale = ScaleBuilders.makeYScale(dataset);
@@ -578,13 +612,17 @@ module CommutesAndRent {
         public labelText(expandedTime: number): (d: RentTime) => string {
             return (d: RentTime) => {
                 if (d.time === expandedTime || (this.indices[d.name] === 0 && this.sizes[d.time] === 1)) {
-                    return d.name;
+                    return this.shortnames.get(d.name);
                 } else if (this.indices[d.name] === 0 && this.sizes[d.time] > 1) {
                     return "+";
                 } else {
                     return "";
                 }
             };
+        }
+
+        private limitText(name: string) {
+
         }
     }
 
@@ -668,7 +706,7 @@ module CommutesAndRent {
         public static pixelsPerMinute: number = 15;
         public static barSpacing: number = 2;
 
-        public static margins: any = { top: 50, right: 100, bottom: 50, left: 60 };
+        public static margins: any = { top: 50, right: 125, bottom: 50, left: 60 };
 
         public static xAxisOffset: number = 40;
         public static yAxisOffset: number = 50;

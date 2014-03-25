@@ -239,6 +239,7 @@ var CommutesAndRent;
             this._highlighted = [];
             this.destinationListeners = [];
             this.dataUpdateListeners = [];
+            this.shortNames = d3.map();
         }
         Model.prototype.moveTo = function (name) {
             this.moveToListeners.forEach(function (l) {
@@ -356,7 +357,8 @@ var CommutesAndRent;
 
             return Q.all([
                 this.loadRentData(model),
-                this.loadCommuteData(model)
+                this.loadCommuteData(model),
+                this.loadShortNameData(model)
             ]).then(function () {
                 return Q(model);
             });
@@ -376,6 +378,31 @@ var CommutesAndRent;
                 model.rents = data;
                 return null;
             });
+        };
+
+        Controller.prototype.loadShortNameData = function (model) {
+            var filepath = ControllerConstants.shortnameFile;
+
+            return Q($.getJSON(filepath)).then(function (data) {
+                model.shortNames = Controller.parseShortNames(data);
+                return null;
+            });
+        };
+
+        Controller.parseShortNames = function (data) {
+            var result = d3.map();
+
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+
+                if (d.shortname !== "") {
+                    result.set(d.name, d.shortname);
+                } else {
+                    result.set(d.name, d.name);
+                }
+            }
+
+            return result;
         };
 
         Controller.prototype.initializeSelf = function (model) {
@@ -403,6 +430,8 @@ var CommutesAndRent;
 
         ControllerConstants.rentStatsFolder = "preprocessor-output/processed-rents/";
         ControllerConstants.departureTimesFolder = "preprocessor-output/processed-departure-times/";
+
+        ControllerConstants.shortnameFile = "short-names.json";
         return ControllerConstants;
     })();
 })(CommutesAndRent || (CommutesAndRent = {}));
@@ -416,6 +445,7 @@ var CommutesAndRent;
             this.model = model;
 
             this.initialize();
+            console.log(model.shortNames);
 
             model.dataUpdateListeners.push(function () {
                 return _this.update();
@@ -462,7 +492,7 @@ var CommutesAndRent;
 
         ChartView.prototype.update = function () {
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
-            this.graphics = new Graphics(this.data);
+            this.graphics = new Graphics(this.data, this.model.shortNames);
 
             var selection = d3.selectAll(".bargroup").data(this.data, function (rentTime) {
                 return rentTime.name;
@@ -493,8 +523,6 @@ var CommutesAndRent;
         };
 
         ChartView.prototype.expandTime = function (time) {
-            console.log(time);
-
             var selection = d3.selectAll(".bargroup");
 
             selection.classed("expanded", function (d) {
@@ -571,10 +599,11 @@ var CommutesAndRent;
     CommutesAndRent.RentTime = RentTime;
 
     var Graphics = (function () {
-        function Graphics(dataset) {
+        function Graphics(dataset, shortnames) {
             this.sizes = d3.map();
             this.indices = d3.map();
             this.chartWidth = $("#chart").width();
+            this.shortnames = shortnames;
 
             this.xScale = ScaleBuilders.makeXScale(dataset, this.chartWidth);
             this.yScale = ScaleBuilders.makeYScale(dataset);
@@ -687,13 +716,16 @@ var CommutesAndRent;
             var _this = this;
             return function (d) {
                 if (d.time === expandedTime || (_this.indices[d.name] === 0 && _this.sizes[d.time] === 1)) {
-                    return d.name;
+                    return _this.shortnames.get(d.name);
                 } else if (_this.indices[d.name] === 0 && _this.sizes[d.time] > 1) {
                     return "+";
                 } else {
                     return "";
                 }
             };
+        };
+
+        Graphics.prototype.limitText = function (name) {
         };
         return Graphics;
     })();
@@ -769,7 +801,7 @@ var CommutesAndRent;
         ChartConstants.pixelsPerMinute = 15;
         ChartConstants.barSpacing = 2;
 
-        ChartConstants.margins = { top: 50, right: 100, bottom: 50, left: 60 };
+        ChartConstants.margins = { top: 50, right: 125, bottom: 50, left: 60 };
 
         ChartConstants.xAxisOffset = 40;
         ChartConstants.yAxisOffset = 50;
