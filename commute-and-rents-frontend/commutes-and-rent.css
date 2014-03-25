@@ -112,6 +112,11 @@ html, body, #app {
     transition-duration: 0.25s;
 }
 
+.bargroup.nulldata .median {
+    opacity: 0;
+}
+
+
 .bargroup.expanded .background {
     stroke-width: 0;
     transition-duration: 0.25s;

@@ -6510,7 +6510,7 @@
     <Content Include="preprocessor-output\processed-departure-times\960\Wood Lane.json" />
     <Content Include="preprocessor-output\processed-departure-times\960\Woodford.json" />
     <Content Include="preprocessor-output\processed-departure-times\960\Woodside Park.json" />
-    <Content Include="preprocessor-output\short-names.json" />
+    <Content Include="short-names.json" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
