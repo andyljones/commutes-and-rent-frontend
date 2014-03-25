@@ -11,15 +11,15 @@
         <div id="instructions" class="d3-slider">
             <h2>Commutes & Rent</h2>
             <ol>
-                <li>Choose a station from the map</li>
-                <li>Choose an arrival time</li>
-                <li>Choose a type of property</li>
+                <li>Pick a destination on the map</li>
+                <li>Pick an arrival time</li>
+                <li>Pick a type of property</li>
                 <li>Click on the blue bars!</li>
             </ol>
             <p>
                 The chart on the right displays the typical range of property prices near a station in terms of the commute time from that station.
             </p>
-            <svg height="100px" width="100%">
+            <svg height="65px" width="100%">
 
                 <g class="example">
                     <text x=100 y=10 text-anchor="middle">Average</text>
@@ -30,9 +30,46 @@
 
                     <polyline points="25,40 25,45 125,45 125,50, 125,45 225,45 225,40"></polyline>
                     <text x=125 y=60 text-anchor="middle">50% of properties</text>
-
                 </g>
             </svg>
+            <p>
+                Commute time is calculated with the goal of getting you to the chosen station by the chosen time.
+            </p>
+            <p>
+                The rent range around each station is derived from the rent statistics for the Local Authority District the station lies in.
+            </p>
+
+            <h3>FAQ</h3>
+            <dl>
+                <dt>Why are there no stations south of the river?</dt>
+                <dd>The TfL data used to calculate commutes only covers the Underground and DLR. The timetables for the Overground and for National Rail are available, but parsing the ancient format they use is still on my to-do list.</dd>
+                
+                <dt>What are the red bars?</dt>
+                <dd>They represent stations for which there's no rent data available - not enough properties are rented in those areas for the ONS to provide figures!</dd>
+                
+                <dt>Those seem much shorter commutes than I'm used to!</dt>
+                <dd>There's two factors here: first, travel between stations obivously doesn't account for walking to and from the station. Second, I haven't been able to find any machine-readable data about how long it takes to change platforms at each station, so for better or worse I've assumed you can teleport. Because Underground trains are fairly frequent, this shouldn't distort the results too much.</dd>
+                
+                <dt>Stations <em>x</em> and <em>y</em> are right next to eachother, but your chart says they take ages to get between!</dt>
+                <dd>With only TfL data at hand, the only kind of links the program can "see" are along an underground line between stations, or between platforms of a station. Fortunately in most of the places where two lines come close together, there's a station serving both (though there are some notable exceptions)</dd>
+                
+                <dt>What about buses?</dt>
+                <dd>TfL does provide good data for buses, but the amount of time that'd be needed to calculate the fastest route between any pair out of several thousand bus stops... well it's not out of the question, but it's definitely more intimidating. Maybe in future.</dd>
+                
+                <dt>Why'd you make this?</dt>
+                <dd>When I learn new languages or tools, I like to have a project to motivate me. In this case I wanted to learn JavaScript/HTML/CSS and Java. </dd>
+                
+                <dt>Where can I find the source?</dt>
+                <dd>The code for this front end can be found in <a href="https://github.com/andyljones">the github repository that backs my blog (and this site)</a>. The code for the preprocessor will be there too as soon as I've cleaned up a few rough edges.</dd>
+            </dl>
+            
+            <h3>Links</h3>
+            <ul>
+                <li><a href="http://andyljones.github.io/">My personal blog.</a></li>
+                <li><a href="http://www.tfl.gov.uk/info-for/open-data-users/">TfL's Open Data website</a>, source of all commute data.</li>
+                <li><a href="http://www.statistics.gov.uk/hub/index.html">The ONS's website</a>, source of all rent data.</li>
+            </ul>
+
         </div>
         <div id="map-and-controls" class="d3-slider">
             <div id="map"></div>

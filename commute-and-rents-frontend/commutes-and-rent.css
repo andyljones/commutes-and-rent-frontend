@@ -10,21 +10,36 @@ html, body, #app {
 }
 
 #instructions {
-    position: fixed;
+    float: left;
     width: 250px;
-    height: calc(100% - 30px);
     margin: 10px;
     padding: 0px 10px 10px 10px;
     font-size:14px;
     text-align: justify;
 }
 
-#instructions ol {
+#instructions ol, #instructions ul {
     margin-left: -20px;
 }
 
-#instructions h2 {
+#instructions h2, #instructions h3 {
     text-align: center;
+}
+
+#instructions dl {
+    margin: 0;
+    padding: 0;
+}
+
+#instructions dl dt {
+    margin: 0;
+	padding: 0;
+	font-weight: bold;
+}
+
+#instructions dl dd {
+    margin: 0 0 1em 0;
+	padding: 0;
 }
 
 .example text {
