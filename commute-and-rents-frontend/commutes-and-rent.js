@@ -442,10 +442,7 @@ var CommutesAndRent;
         function ChartView(model) {
             var _this = this;
             this.currentlyExpanded = null;
-            this.model = model;
-
-            this.initialize();
-            console.log(model.shortNames);
+            this.initialize(model);
 
             model.dataUpdateListeners.push(function () {
                 return _this.update();
@@ -457,8 +454,9 @@ var CommutesAndRent;
                 return _this.highlightDestination();
             });
         }
-        ChartView.prototype.initialize = function () {
+        ChartView.prototype.initialize = function (model) {
             var _this = this;
+            this.model = model;
             this.data = ChartView.generateDataset(this.model.rents, this.model.commutes);
 
             var selection = d3.select("#chart").selectAll(".bargroup").data(this.data).enter().append("g");
@@ -616,12 +614,7 @@ var CommutesAndRent;
             Graphics.setChartHeight(dataset);
         }
         Graphics.setChartHeight = function (dataset) {
-            var times = dataset.map(function (departure) {
-                return departure.time;
-            });
-            var range = d3.max(times) - d3.min(times);
-
-            $("#chart").height(ChartConstants.pixelsPerMinute * range);
+            $("#chart").height(ChartConstants.pixelsPerMinute * ChartConstants.yScaleDomainMax);
         };
 
         //TODO: This is awful.
@@ -746,15 +739,11 @@ var CommutesAndRent;
         };
 
         ScaleBuilders.makeYScale = function (dataset) {
-            var times = dataset.map(function (departure) {
-                return departure.time;
-            });
-            var range = d3.max(times) - d3.min(times);
-
-            return d3.scale.linear().domain([0, d3.max(times)]).rangeRound([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom]).nice();
+            return d3.scale.linear().domain([0, ChartConstants.yScaleDomainMax]).rangeRound([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * ChartConstants.yScaleDomainMax - ChartConstants.margins.bottom]).nice();
         };
         return ScaleBuilders;
     })();
+    CommutesAndRent.ScaleBuilders = ScaleBuilders;
 
     var AxisBuilders = (function () {
         function AxisBuilders() {
@@ -787,7 +776,7 @@ var CommutesAndRent;
 
         AxisBuilders.makeYLabel = function (yScale) {
             if ($(".y.label").length === 0) {
-                var midpoint = (yScale.range()[0] + yScale.range()[1]) / 2;
+                var midpoint = $("#app").height() / 2;
 
                 d3.select(".y.axis").append("text").classed("y label", true).attr("transform", "translate(" + ChartConstants.yAxisLabelXOffset + "," + midpoint + "), rotate(-90)").attr("text-anchor", "middle").text("Commute Time (mins)");
             }
@@ -811,6 +800,8 @@ var CommutesAndRent;
 
         ChartConstants.yLabelOffset = 3;
         ChartConstants.xLabelOffset = 10;
+
+        ChartConstants.yScaleDomainMax = 120;
         return ChartConstants;
     })();
 })(CommutesAndRent || (CommutesAndRent = {}));
