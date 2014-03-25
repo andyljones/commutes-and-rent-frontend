@@ -75,7 +75,7 @@ module CommutesAndRent {
         public static hoursToMinutes: (number) => number = n => 60 * (n - 1);
         public static minutesToHours: (number) => number = n => n/60 + 1;
 
-        public static propertyTypes: string[] = ["Room", "Studio", "1 bedroom", "2 bedrooms", "3 bedrooms", "4+ bedrooms"];
+        public static propertyTypes: string[] = ["Room", "Studio", "1 bed", "2 bed", "3 bed", "4+ bed"];
         public static rentFilenames: string[] = ["room-rents.json", "studio-rents.json", "1-bedroom-rents.json", "2-bedroom-rents.json", "3-bedroom-rents.json", "4-bedroom-rents.json"];
     }
 }
@@ -121,7 +121,7 @@ module CommutesAndRent {
             {
                 var latLng: L.LatLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon })
+                var marker: L.Marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon, title: locations[i].name })
                     .addTo(this.mapObject)
                     .on("click", (e: L.LeafletMouseEvent) => this.model.destination = e.target.name)
                     .on("mouseover", (e: L.LeafletMouseEvent) => this.model.highlighted = [e.target.name]);

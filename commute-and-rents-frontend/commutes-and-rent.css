@@ -11,20 +11,32 @@ html, body, #app {
 
 #instructions {
     position: fixed;
-    width: 200px;
-    height: calc(100% - 40px);
+    width: 250px;
+    height: calc(100% - 30px);
     margin: 10px;
-    padding: 10px;
-    font-size:11px;
+    padding: 0px 10px 10px 10px;
+    font-size:14px;
     text-align: justify;
+}
+
+#instructions ol {
+    margin-left: -20px;
+}
+
+#instructions h2 {
+    text-align: center;
+}
+
+.example text {
+    font-size: 11px;
 }
 
 #map-and-controls {
     position: fixed;
-    width: calc(50% - 130px);
+    width: calc(50% - 180px);
     height: calc(100% - 20px);
     margin: 10px;
-    margin-left: 240px;
+    margin-left: 290px;
 }
 
 #controls {
@@ -62,7 +74,7 @@ html, body, #app {
 
 /* Chart default styling */
 
-.axis path {
+.axis path, .example polyline {
     stroke-width: 1;
     fill: none;
     stroke: #aaa;
@@ -73,8 +85,8 @@ html, body, #app {
     opacity: 0;
 }
 
-.bargroup .rect, .bargroup .median {
-    fill: navy;
+.bargroup .rect, .bargroup .median, .example .rect, .example .median {
+    fill: cornflowerblue;
     opacity: 0.4;
     stroke: black;
     stroke-width: 1;

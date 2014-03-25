@@ -9,14 +9,37 @@
 <body>
     <div id="app">
         <div id="instructions" class="d3-slider">
-            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
+            <h2>Commutes & Rent</h2>
+            <ol>
+                <li>Choose a station from the map</li>
+                <li>Choose an arrival time</li>
+                <li>Choose a type of property</li>
+                <li>Click on the blue bars!</li>
+            </ol>
+            <p>
+                The chart on the right displays the typical range of property prices near a station in terms of the commute time from that station.
+            </p>
+            <svg height="100px" width="100%">
+
+                <g class="example">
+                    <text x=100 y=10 text-anchor="middle">Average</text>
+                    <polyline points="95,23 95,18 100,18 100,13 100,18 105,18 105,23"></polyline>
+
+                    <rect x=25 y="25" width=200 height=13 class="rect" style="opacity:1;"></rect>
+                    <line x1=100 y1=25 x2=100 y2=38 class="median" style="opacity:1;"></line>
+
+                    <polyline points="25,40 25,45 125,45 125,50, 125,45 225,45 225,40"></polyline>
+                    <text x=125 y=60 text-anchor="middle">50% of properties</text>
+
+                </g>
+            </svg>
         </div>
         <div id="map-and-controls" class="d3-slider">
+            <div id="map"></div>
             <div id="controls">
                 <div class="slider-label">Arrival time:</div><div id="timeslider" class="slider"></div>
                 <div class="slider-label">Property type:</div><div id="bedroomslider" class="slider"></div>
             </div>
-            <div id="map"></div>
         </div>
         <div id="chart-holder">
             <svg id="chart" class="d3-slider">

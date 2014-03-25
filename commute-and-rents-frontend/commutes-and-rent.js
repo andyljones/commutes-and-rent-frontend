@@ -65,7 +65,7 @@ var CommutesAndRent;
             return n / 60 + 1;
         };
 
-        SliderConstants.propertyTypes = ["Room", "Studio", "1 bedroom", "2 bedrooms", "3 bedrooms", "4+ bedrooms"];
+        SliderConstants.propertyTypes = ["Room", "Studio", "1 bed", "2 bed", "3 bed", "4+ bed"];
         SliderConstants.rentFilenames = ["room-rents.json", "studio-rents.json", "1-bedroom-rents.json", "2-bedroom-rents.json", "3-bedroom-rents.json", "4-bedroom-rents.json"];
         return SliderConstants;
     })();
@@ -114,7 +114,7 @@ var CommutesAndRent;
             for (var i = 0; i < locations.length; i++) {
                 var latLng = new L.LatLng(locations[i].latitude, locations[i].longitude);
 
-                var marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon }).addTo(this.mapObject).on("click", function (e) {
+                var marker = new StationMarker(locations[i].name, latLng, { icon: MapConstants.defaultIcon, title: locations[i].name }).addTo(this.mapObject).on("click", function (e) {
                     return _this.model.destination = e.target.name;
                 }).on("mouseover", function (e) {
                     return _this.model.highlighted = [e.target.name];
@@ -139,7 +139,7 @@ var CommutesAndRent;
                     marker.setIcon(MapConstants.defaultIcon);
                 }
             });
-
+            console.log(names);
             var markers = names.map(function (name) {
                 return _this.markerLookup.get(name);
             });
