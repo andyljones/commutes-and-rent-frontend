@@ -608,17 +608,13 @@ module CommutesAndRent {
         public labelText(expandedTime: number): (d: RentTime) => string {
             return (d: RentTime) => {
                 if (d.time === expandedTime || (this.indices[d.name] === 0 && this.sizes[d.time] === 1)) {
-                    return this.shortnames.get(d.name);
+                    return this.shortnames.get(d.name) || d.name;
                 } else if (this.indices[d.name] === 0 && this.sizes[d.time] > 1) {
                     return "+";
                 } else {
                     return "";
                 }
             };
-        }
-
-        private limitText(name: string) {
-
         }
     }
 
@@ -648,8 +644,7 @@ module CommutesAndRent {
         public static makeXAxis(xScale: D3.Scale.LinearScale): void {
             var axis: D3.Svg.Axis = d3.svg.axis()
                 .scale(xScale)
-                .orient("top")
-                .tickFormat(d => "£" + d);
+                .orient("top");
 
             d3.select(".x.axis")
                 .attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")")
@@ -700,7 +695,7 @@ module CommutesAndRent {
         public static pixelsPerMinute: number = 15;
         public static barSpacing: number = 2;
 
-        public static margins: any = { top: 50, right: 125, bottom: 50, left: 60 };
+        public static margins: any = { top: 50, right: 130, bottom: 50, left: 60 };
 
         public static xAxisOffset: number = 40;
         public static yAxisOffset: number = 50;

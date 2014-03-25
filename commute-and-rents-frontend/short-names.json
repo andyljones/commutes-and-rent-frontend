@@ -169,7 +169,6 @@
 {"name":"Goodge Street","shortname":""},
 {"name":"South Kenton","shortname":""},
 {"name":"Queensbury","shortname":""},
-{"name":"Canary Wharf","shortname":""},
 {"name":"Neasden","shortname":""},
 {"name":"Kensington (Olympia)","shortname":"Kens. Olympia"},
 {"name":"Alperton","shortname":""},
@@ -266,4 +265,13 @@
 {"name":"Euston Square","shortname":""},
 {"name":"Finchley Road","shortname":""},
 {"name":"Burnt Oak","shortname":""},
-{"name":"Wanstead","shortname":""}]
+{"name":"Wanstead","shortname":""},
+{"name":"Greenwich Station","shortname":"Greenwich St."},
+{"name":"Canary Wharf DLR","shortname":"Canary Wh. DLR"},
+{"name":"West Silvertown DLR Station","shortname":"Silvertown DLR"},
+{"name":"Stratford International","shortname":"Stratford Int."},
+{"name":"London City Airport","shortname":"City Airport"},
+{"name":"Abbey Road DLR Station","shortname":"Abbey Road DLR"},
+{"name":"Stratford High Street","shortname":"Stratford High St."},
+{"name":"Canary Wharf DLR","shortname":"Canary Wh. DLR"},
+{"name":"Walthamstow Central","shortname":"Walthamstow Cen."}]

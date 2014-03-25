@@ -709,16 +709,13 @@ var CommutesAndRent;
             var _this = this;
             return function (d) {
                 if (d.time === expandedTime || (_this.indices[d.name] === 0 && _this.sizes[d.time] === 1)) {
-                    return _this.shortnames.get(d.name);
+                    return _this.shortnames.get(d.name) || d.name;
                 } else if (_this.indices[d.name] === 0 && _this.sizes[d.time] > 1) {
                     return "+";
                 } else {
                     return "";
                 }
             };
-        };
-
-        Graphics.prototype.limitText = function (name) {
         };
         return Graphics;
     })();
@@ -749,9 +746,7 @@ var CommutesAndRent;
         function AxisBuilders() {
         }
         AxisBuilders.makeXAxis = function (xScale) {
-            var axis = d3.svg.axis().scale(xScale).orient("top").tickFormat(function (d) {
-                return "£" + d;
-            });
+            var axis = d3.svg.axis().scale(xScale).orient("top");
 
             d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").transition().call(axis);
 
@@ -790,7 +785,7 @@ var CommutesAndRent;
         ChartConstants.pixelsPerMinute = 15;
         ChartConstants.barSpacing = 2;
 
-        ChartConstants.margins = { top: 50, right: 125, bottom: 50, left: 60 };
+        ChartConstants.margins = { top: 50, right: 130, bottom: 50, left: 60 };
 
         ChartConstants.xAxisOffset = 40;
         ChartConstants.yAxisOffset = 50;
