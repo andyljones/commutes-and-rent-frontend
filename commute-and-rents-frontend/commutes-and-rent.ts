@@ -596,7 +596,8 @@ module CommutesAndRent {
 
             return d3.scale.linear()
                 .domain([lowestRent, highestRent])
-                .range([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]);
+                .rangeRound([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right])
+                .nice();
         }
 
         public static makeYScale(dataset: RentTime[]): D3.Scale.LinearScale {
@@ -605,7 +606,7 @@ module CommutesAndRent {
 
             return d3.scale.linear()
                 .domain([0, d3.max(times)])
-                .range([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom])
+                .rangeRound([ChartConstants.margins.top, ChartConstants.pixelsPerMinute * range - ChartConstants.margins.bottom])
                 .nice();
         }
     }

@@ -710,7 +710,7 @@ var CommutesAndRent;
                 return stat.upperQuartile;
             });
 
-            return d3.scale.linear().domain([lowestRent, highestRent]).range([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]);
+            return d3.scale.linear().domain([lowestRent, highestRent]).range([ChartConstants.margins.left, chartWidth - ChartConstants.margins.right]).nice();
         };
 
         ScaleBuilders.makeYScale = function (dataset) {

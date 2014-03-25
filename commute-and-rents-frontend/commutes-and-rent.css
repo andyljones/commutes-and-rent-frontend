@@ -1,5 +1,4 @@
 ﻿@import "library/leaflet/leaflet.css";
-
 @import "library/d3.slider/d3.slider.css";
 
 html, body, #app {
@@ -10,21 +9,14 @@ html, body, #app {
 
 #map-and-controls {
     position: fixed;
-    height: 95%;
-    width: 45%;
-    margin: 10px;
-}
-
-#map-and-controls-placeholder {
-    float: left;
-    height: 100%;
-    width: 45%;
+    width: calc(50% - 15px);
+    height: calc(100% - 20px);
     margin: 10px;
 }
 
 #controls {
     width: 100%;
-    height: 100px;
+    height: 80px;
 }
 
 .slider {
@@ -35,17 +27,20 @@ html, body, #app {
 }
 
 #map {
-    float: left;
-    height: 90%;
-    width: 100%;
+    width: calc(100% - 20px);
+    height: calc(100% - 120px);
+    margin: 10px;
 }
 
 #chart-holder {
     height: 100%;
-    float: left;
-    width: 50%;
+    float: right;
+    width: calc(50% - 15px);
     margin: 10px;
 }
+
+
+/* Chart default styling */
 
 .axis path {
     stroke-width: 1;
@@ -73,7 +68,7 @@ html, body, #app {
     font-size: 11px;
 }
 
-/* Transition classes */
+/* Chart transition styling */
 
 .bargroup.destination .rect, .bargroup.destination .label {
     fill: green;
