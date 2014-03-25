@@ -25,11 +25,25 @@ var CommutesAndRent;
 
             var scale = d3.scale.ordinal().domain(d3.range(SliderConstants.minTime, SliderConstants.maxTime, SliderConstants.stepTime)).rangePoints([0, $("#timeslider").width()]);
 
-            var axis = d3.svg.axis().scale(scale).tickValues(d3.range(SliderConstants.minTime, SliderConstants.maxTime + 1, SliderConstants.stepTime));
+            var axis = d3.svg.axis().scale(scale).tickValues(d3.range(SliderConstants.minTime + 2, SliderConstants.maxTime + 1, 3 * SliderConstants.stepTime)).tickFormat(function (t) {
+                return _this.formatHour(t);
+            });
 
             slider.axis(axis);
 
             d3.select("#timeslider").call(slider);
+        };
+
+        SlidersController.prototype.formatHour = function (t) {
+            if (t <= 11) {
+                return t + "am";
+            } else if (t == 12) {
+                return "12pm";
+            } else if (12 < t && t < 24) {
+                return (t % 12) + "pm";
+            } else if (t === 24) {
+                return "12am";
+            }
         };
 
         SlidersController.prototype.makeBedroomCountSlider = function () {
@@ -139,7 +153,7 @@ var CommutesAndRent;
                     marker.setIcon(MapConstants.defaultIcon);
                 }
             });
-            console.log(names);
+
             var markers = names.map(function (name) {
                 return _this.markerLookup.get(name);
             });
@@ -746,7 +760,7 @@ var CommutesAndRent;
         function AxisBuilders() {
         }
         AxisBuilders.makeXAxis = function (xScale) {
-            var axis = d3.svg.axis().scale(xScale).orient("top");
+            var axis = d3.svg.axis().scale(xScale).orient("top").ticks(5);
 
             d3.select(".x.axis").attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")").transition().call(axis);
 

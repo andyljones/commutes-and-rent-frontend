@@ -61,7 +61,7 @@ html, body, #app {
 
 .slider {
     float: left;
-    width: calc(100% - 220px);
+    width: calc(100% - 160px);
     margin: 10px;
 }
 

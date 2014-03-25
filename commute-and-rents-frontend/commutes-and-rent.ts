@@ -37,13 +37,24 @@ module CommutesAndRent {
 
             var axis = d3.svg.axis()
                 .scale(scale)
-                .tickValues(d3.range(SliderConstants.minTime, SliderConstants.maxTime + 1, SliderConstants.stepTime));
+                .tickValues(d3.range(SliderConstants.minTime + 2, SliderConstants.maxTime + 1, 3 * SliderConstants.stepTime))
+                .tickFormat(t => this.formatHour(t));
 
             slider.axis(axis);
 
             d3.select("#timeslider").call(slider);
+        }
 
-
+        private formatHour(t: number) {
+            if (t <= 11) {
+                return t + "am";
+            } else if (t == 12) {
+                return "12pm";
+            } else if (12 < t && t < 24) {
+                return (t % 12) + "pm";
+            } else if (t === 24) {
+                return "12am";
+            }
         }
 
         private makeBedroomCountSlider() {
@@ -644,7 +655,8 @@ module CommutesAndRent {
         public static makeXAxis(xScale: D3.Scale.LinearScale): void {
             var axis: D3.Svg.Axis = d3.svg.axis()
                 .scale(xScale)
-                .orient("top");
+                .orient("top")
+                .ticks(5);
 
             d3.select(".x.axis")
                 .attr("transform", "translate(0," + ChartConstants.xAxisOffset + ")")
@@ -668,7 +680,9 @@ module CommutesAndRent {
 
 
         public static makeYAxis(yScale: D3.Scale.LinearScale): void {
-            var axis: D3.Svg.Axis = d3.svg.axis().scale(yScale).orient("left");
+            var axis: D3.Svg.Axis = d3.svg.axis()
+                .scale(yScale)
+                .orient("left");
 
             d3.select(".y.axis")
                 .attr("transform", "translate(" + ChartConstants.yAxisOffset + ",0)")
