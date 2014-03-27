@@ -5,7 +5,7 @@
     BSD license: http://opensource.org/licenses/BSD-3-Clause
 */
 
-d3slider = function module() {
+d3.slider = function module() {
     "use strict";
 
     // Public variables width default settings

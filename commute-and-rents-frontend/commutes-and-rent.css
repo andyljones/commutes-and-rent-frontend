@@ -9,6 +9,7 @@ html, body, #app {
     font-family: Verdana,Arial,sans-serif;
 }
 
+/* Instructions styling */
 #instructions {
     float: left;
     width: 250px;
@@ -46,6 +47,7 @@ html, body, #app {
     font-size: 11px;
 }
 
+/* Map and controls styling */
 #map-and-controls {
     position: fixed;
     width: calc(50% - 180px);
@@ -79,15 +81,13 @@ html, body, #app {
     margin: 10px;
 }
 
+/* Chart default styling */
 #chart-holder {
     height: 100%;
     float: right;
     width: calc(50% - 130px);
     margin: 10px;
 }
-
-
-/* Chart default styling */
 
 .axis path, .example polyline {
     stroke-width: 1;
@@ -112,7 +112,6 @@ html, body, #app {
 }
 
 /* Chart transition styling */
-
 .bargroup.destination .rect, .bargroup.destination .label {
     fill: green;
     opacity: 1;
@@ -142,7 +141,6 @@ html, body, #app {
 .bargroup.nulldata .median {
     opacity: 0;
 }
-
 
 .bargroup.expanded .background {
     stroke-width: 0;

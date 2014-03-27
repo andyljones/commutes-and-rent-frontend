@@ -1,4 +1,6 @@
 preprocessor-output/
+commute-and-rents-frontend/*.js
+commute-and-rents-frontend/*.js.map
 
 #####VISUAL STUDIO#####
 

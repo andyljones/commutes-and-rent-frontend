@@ -1,14 +1,130 @@
-﻿window.onload = () => {
+﻿// Originally written in TYPESCRIPT, so if you're viewing the compiled JavaScript then yeah it's not pretty.
+// Source can be found at https://github.com/andyljones/commutes-and-rent-frontend
+
+// EXPORTS IN THIS FILE:
+// - CommutesAndRent.Controller
+//    - Instantiates and links other components.
+//    - Loads data into the model, both at initialization and during operation.
+//
+// - CommutesAndRent.SlidersController
+//    - Instantiates the arrival time & property type sliders.
+//    - Captures input from them and updates the model.
+//
+// - CommutesAndRent.MapView
+//    - Instantiates the map.
+//    - Updates map to reflect the model.
+//    - Captures input from the map and uses it to update the model.
+//
+// - CommutesAndRent.ChartView
+//    - Instantiates the chart.
+//    - Updates the chart to reflect the model.
+//    - Captures input from the chart and uses it to update the model.
+//
+// - CommutesAndRent.Model
+//    - Holds any state of the app that's shared between components.
+//    - Allows components to register for updates to its fields. 
+
+
+// Declare the d3.slider() function to be part of the D3 namespace. 
+// Necessary because the d3.slider library doesn't have a definition file.
+declare module D3 {
+    export interface Base {
+        slider(): any;
+    }
+}
+
+// Instantiates the controller for the app, which will then do everything else. 
+window.onload = () => {
     var controller: CommutesAndRent.Controller = new CommutesAndRent.Controller();
 };
 
-declare function d3slider(): any;
+module CommutesAndRent {
 
-declare module D3 {
-    module Svg {
-        export interface Brush {
-            clamp(clamp: boolean): D3.Svg.Brush;
+    export class Controller {
+        private model: Model;
+        private chart: ChartView;
+        private map: MapView;
+        private sliders: SlidersController;
+
+        constructor() {
+
+            this.initializeModel()
+                .then(model => {
+                    this.model = model;
+                    this.chart = new ChartView(model);
+                    this.map = new MapView(model);
+                    this.sliders = new SlidersController(model);
+                    this.initializeSelf(model);
+                });
         }
+
+        private initializeModel(): Q.Promise<Model> {
+            var model = new Model();
+
+            model.arrivalTime = ControllerConstants.defaultArrivalTime;
+            model.destination = ControllerConstants.defaultDestination;
+            model.propertyFile = ControllerConstants.defaultPropertyFile;
+
+            return Q.all([
+                this.loadRentData(model),
+                this.loadCommuteData(model),
+                this.loadShortNameData(model)
+            ]).then(() => Q(model));
+        }
+
+        private loadCommuteData(model: Model): Q.Promise<void> {
+            var filepath: string = ControllerConstants.departureTimesFolder + model.arrivalTime + "/" + model.destination + ".json";
+            return Q($.getJSON(filepath)).then(data => { model.commutes = data; return null; });
+        }
+
+        private loadRentData(model: Model): Q.Promise<void> {
+            var filepath: string = ControllerConstants.rentStatsFolder + model.propertyFile;
+            return Q($.getJSON(filepath)).then(data => { model.rents = data; return null; });
+        }
+
+        private loadShortNameData(model: Model): Q.Promise<void> {
+            var filepath: string = ControllerConstants.shortnameFile;
+
+            return Q($.getJSON(filepath)).then(data => { model.shortNames = Controller.parseShortNames(data); return null; });
+        }
+
+        private static parseShortNames(data: ShortName[]): D3.Map {
+            var result = d3.map();
+
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+
+                if (d.shortname !== "") {
+                    result.set(d.name, d.shortname);
+                } else {
+                    result.set(d.name, d.name);
+                }
+            }
+
+            return result;
+        }
+
+        private initializeSelf(model: Model): void {
+            model.destinationListeners.push(() => this.loadCommuteData(model));
+            model.arrivalTimeListeners.push(() => this.loadCommuteData(model));
+            model.propertyFileListeners.push(() => this.loadRentData(model));
+        }
+    }
+
+    interface ShortName {
+        name: string;
+        shortname: string;
+    }
+
+    class ControllerConstants {
+        public static defaultArrivalTime: number = 480;
+        public static defaultDestination: string = "Barbican";
+        public static defaultPropertyFile: string = "2-bedroom-rents.json";
+
+        public static rentStatsFolder: string = "preprocessor-output/processed-rents/";
+        public static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
+
+        public static shortnameFile: string = "short-names.json";
     }
 }
 
@@ -26,7 +142,7 @@ module CommutesAndRent {
         }
 
         private makeTimeSlider() {
-            var slider: any = d3slider()
+            var slider: any = d3.slider()
                 .min(SliderConstants.minTime).max(SliderConstants.maxTime).step(SliderConstants.stepTime)
                 .value(SliderConstants.minutesToHours(this.model.arrivalTime))
                 .on("slide", (event, value) => this.model.arrivalTime = SliderConstants.hoursToMinutes(value));
@@ -58,7 +174,7 @@ module CommutesAndRent {
         }
 
         private makeBedroomCountSlider() {
-            var slider: any = d3slider()
+            var slider: any = d3.slider()
                 .min(0).max(SliderConstants.propertyTypes.length - 1).step(1)
                 .value(SliderConstants.rentFilenames.indexOf(this.model.propertyFile))
                 .on("slide", (event, value) => this.model.propertyFile = SliderConstants.rentFilenames[value]);
@@ -225,160 +341,14 @@ module CommutesAndRent {
         public static defaultCenter: L.LatLng = new L.LatLng(51.505, -0.09);
         public static defaultZoom: number = 13;
         
-        public static defaultIcon: L.Icon = L.icon({ iconUrl: "default-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
-        public static highlightIcon: L.Icon = L.icon({ iconUrl: "highlighted-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
-        public static destinationIcon: L.Icon = L.icon({ iconUrl: "destination-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
-        public static nullIcon: L.Icon = L.icon({ iconUrl: "null-icon.png", iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) });
+        public static defaultIcon: L.Icon = L.icon({ iconUrl: "icons/default-icon.png", prototype: MapConstants.commonIconOptions });
+        public static highlightIcon: L.Icon = L.icon({ iconUrl: "icons/highlighted-icon.png", prototype: MapConstants.commonIconOptions });
+        public static destinationIcon: L.Icon = L.icon({ iconUrl: "icons/destination-icon.png", prototype: MapConstants.commonIconOptions });
+        public static nullIcon: L.Icon = L.icon({ iconUrl: "icons/null-icon.png", prototype: MapConstants.commonIconOptions });
+
+        private static commonIconOptions = { iconAnchor: new L.Point(16, 34), shadowUrl: "shadow-icon.png", shadowAnchor: new L.Point(23, 35) };
 
         public static locationDataPath: string = "preprocessor-output/processed-locations/locations.json";
-    }
-}
-
-module CommutesAndRent {
-
-    export class Model {
-
-        public moveToListeners: { (string): void; }[] = [];
-        public moveTo(name: string) { this.moveToListeners.forEach(l => l(name)); }
-
-        public propertyFileListeners: { (): void; }[] = [];
-        private _propertyFile: string;
-        public get propertyFile(): string { return this._propertyFile; }
-        public set propertyFile(value: string) { this._propertyFile = value; this.propertyFileListeners.forEach(l => l()); }
-
-        public arrivalTimeListeners: { (): void; }[] = [];
-        private _arrivalTime: number;
-        public get arrivalTime(): number { return this._arrivalTime; }
-        public set arrivalTime(value: number) { this._arrivalTime = value; this.arrivalTimeListeners.forEach(l => l()); }
-
-        public highlightListeners: { (): void; }[] = [];
-        private _highlighted: string[] = [];
-        public get highlighted(): string[] { return this._highlighted; }
-        public set highlighted(value: string[]) { this._highlighted = value; this.highlightListeners.forEach(l => l()); }
-
-        public destinationListeners: { (): void; }[] = [];
-        private _destination: string;
-        public get destination(): string { return this._destination; }
-        public set destination(value: string) { this._destination = value; this.destinationListeners.forEach(l => l()); }
-
-        public dataUpdateListeners: { (): void; }[] = [];
-        private _rents: RentStatistic[];
-        public get rents(): RentStatistic[] { return this._rents; } 
-        public set rents(value: RentStatistic[]) { this._rents = value; this.dataUpdateListeners.forEach(l => l()); }
-        private _commutes: CommuteTimes;
-        public get commutes(): CommuteTimes { return this._commutes; }
-        public set commutes(value: CommuteTimes) { this._commutes = value; this.dataUpdateListeners.forEach(l => l()); }
-
-        public shortNames: D3.Map = d3.map();
-    }
-
-    export interface RentStatistic {
-        name: string;
-        lowerQuartile: number;
-        median: number;
-        upperQuartile: number;
-    }
-
-    export interface CommuteTimes {
-        arrivalTime: number;
-        destination: string;
-        times: DepartureTime[];
-    }
-
-    export interface DepartureTime {
-        station: string;
-        time: number;
-    }
-}
-
-module CommutesAndRent {
-
-    export class Controller
-    {
-        private model: Model;
-        private chart: ChartView;
-        private map: MapView;
-        private sliders: SlidersController;
-
-        constructor() { 
-
-            this.initializeModel()
-                .then(model => {
-                    this.model = model;
-                    this.chart = new ChartView(model);
-                    this.map = new MapView(model);
-                    this.sliders = new SlidersController(model);
-                    this.initializeSelf(model);
-                });
-        }
-
-        private initializeModel(): Q.Promise<Model> {
-            var model = new Model();
-
-            model.arrivalTime = ControllerConstants.defaultArrivalTime;
-            model.destination = ControllerConstants.defaultDestination;
-            model.propertyFile = ControllerConstants.defaultPropertyFile;
-
-            return Q.all([
-                this.loadRentData(model),
-                this.loadCommuteData(model),
-                this.loadShortNameData(model)
-            ]).then(() => Q(model));
-        }
-
-        private loadCommuteData(model: Model): Q.Promise<void> {
-            var filepath: string = ControllerConstants.departureTimesFolder + model.arrivalTime + "/" + model.destination + ".json";
-            return Q($.getJSON(filepath)).then(data => { model.commutes = data; return null; });
-        }
-
-        private loadRentData(model: Model): Q.Promise<void> {
-            var filepath: string = ControllerConstants.rentStatsFolder + model.propertyFile;
-            return Q($.getJSON(filepath)).then(data => { model.rents = data; return null; });
-        }
-
-        private loadShortNameData(model: Model): Q.Promise<void> {
-            var filepath: string = ControllerConstants.shortnameFile;
-
-            return Q($.getJSON(filepath)).then(data => { model.shortNames = Controller.parseShortNames(data); return null; });
-        }
-
-        private static parseShortNames(data: ShortName[]): D3.Map {
-            var result = d3.map();
-
-            for (var i = 0; i < data.length; i++) {
-                var d = data[i];
-
-                if (d.shortname !== "") {
-                    result.set(d.name, d.shortname);
-                } else {
-                    result.set(d.name, d.name);
-                }
-            }
-
-            return result;
-        }
-
-        private initializeSelf(model: Model): void {
-            model.destinationListeners.push(() => this.loadCommuteData(model));
-            model.arrivalTimeListeners.push(() => this.loadCommuteData(model));
-            model.propertyFileListeners.push(() => this.loadRentData(model));
-        }
-    }
-
-    interface ShortName {
-        name: string;
-        shortname: string;
-    }
-
-    class ControllerConstants {
-        public static defaultArrivalTime: number = 480;
-        public static defaultDestination: string = "Barbican";
-        public static defaultPropertyFile: string = "2-bedroom-rents.json";
-        
-        public static rentStatsFolder: string = "preprocessor-output/processed-rents/";
-        public static departureTimesFolder: string = "preprocessor-output/processed-departure-times/";
-
-        public static shortnameFile: string = "short-names.json";
     }
 }
 
@@ -499,7 +469,7 @@ module CommutesAndRent {
         }
     }
 
-    export class RentTime implements RentStatistic {
+    class RentTime implements RentStatistic {
         name: string;
         lowerQuartile: number;
         median: number;
@@ -517,7 +487,7 @@ module CommutesAndRent {
         }
     }
 
-    export class Graphics {
+    class Graphics {
 
         private xScale: D3.Scale.LinearScale;
         private yScale: D3.Scale.LinearScale;
@@ -629,7 +599,7 @@ module CommutesAndRent {
         }
     }
 
-    export class ScaleBuilders {
+    class ScaleBuilders {
 
         public static makeXScale(dataset: RentTime[], chartWidth: number): D3.Scale.LinearScale {
             var lowestRent: number = d3.min(dataset, stat => stat.lowerQuartile);
@@ -723,4 +693,61 @@ module CommutesAndRent {
         public static yScaleDomainMax: number = 120;
     }
 
+}
+
+module CommutesAndRent {
+
+    export class Model {
+
+        public moveToListeners: { (string): void; }[] = [];
+        public moveTo(name: string) { this.moveToListeners.forEach(l => l(name)); }
+
+        public propertyFileListeners: { (): void; }[] = [];
+        private _propertyFile: string;
+        public get propertyFile(): string { return this._propertyFile; }
+        public set propertyFile(value: string) { this._propertyFile = value; this.propertyFileListeners.forEach(l => l()); }
+
+        public arrivalTimeListeners: { (): void; }[] = [];
+        private _arrivalTime: number;
+        public get arrivalTime(): number { return this._arrivalTime; }
+        public set arrivalTime(value: number) { this._arrivalTime = value; this.arrivalTimeListeners.forEach(l => l()); }
+
+        public highlightListeners: { (): void; }[] = [];
+        private _highlighted: string[] = [];
+        public get highlighted(): string[] { return this._highlighted; }
+        public set highlighted(value: string[]) { this._highlighted = value; this.highlightListeners.forEach(l => l()); }
+
+        public destinationListeners: { (): void; }[] = [];
+        private _destination: string;
+        public get destination(): string { return this._destination; }
+        public set destination(value: string) { this._destination = value; this.destinationListeners.forEach(l => l()); }
+
+        public dataUpdateListeners: { (): void; }[] = [];
+        private _rents: RentStatistic[];
+        public get rents(): RentStatistic[] { return this._rents; }
+        public set rents(value: RentStatistic[]) { this._rents = value; this.dataUpdateListeners.forEach(l => l()); }
+        private _commutes: CommuteTimes;
+        public get commutes(): CommuteTimes { return this._commutes; }
+        public set commutes(value: CommuteTimes) { this._commutes = value; this.dataUpdateListeners.forEach(l => l()); }
+
+        public shortNames: D3.Map = d3.map();
+    }
+
+    export interface RentStatistic {
+        name: string;
+        lowerQuartile: number;
+        median: number;
+        upperQuartile: number;
+    }
+
+    export interface CommuteTimes {
+        arrivalTime: number;
+        destination: string;
+        times: DepartureTime[];
+    }
+
+    export interface DepartureTime {
+        station: string;
+        time: number;
+    }
 }

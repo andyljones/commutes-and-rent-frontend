@@ -18,9 +18,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="commutes-and-rent.css" />
-    <Content Include="default-icon.png" />
-    <Content Include="destination-icon.png" />
-    <Content Include="highlighted-icon.png" />
+    <Content Include="icons\default-icon.png" />
+    <Content Include="icons\destination-icon.png" />
+    <Content Include="icons\highlighted-icon.png" />
     <Content Include="index.html" />
     <Content Include="library\d3.slider\d3.slider.css" />
     <Content Include="library\d3.slider\d3.slider.js" />
@@ -34,12 +34,11 @@
     <Content Include="library\leaflet\leaflet.css" />
     <Content Include="library\leaflet\leaflet.js" />
     <Content Include="library\q\q.js" />
-    <Content Include="null-icon.png" />
-    <Content Include="shadow-icon.png" />
+    <Content Include="icons\null-icon.png" />
+    <Content Include="icons\shadow-icon.png" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="commutes-and-rent-old" />
     <TypeScriptCompile Include="commutes-and-rent.ts" />
     <TypeScriptCompile Include="library\d3\d3.d.ts" />
     <TypeScriptCompile Include="library\jquery\jquery.d.ts" />
