@@ -617,7 +617,7 @@ module CommutesAndRent {
 
         private sizes: D3.Map = d3.map();
         private indices: D3.Map = d3.map();
-
+        
         private chartWidth: number;
 
         private shortnames: D3.Map;
@@ -626,8 +626,11 @@ module CommutesAndRent {
          * Constructs a set of RentTime -> graphical attribute methods using the given data and short names.
          */
         constructor(dataset: RentTime[], shortnames: D3.Map) {
-            this.chartWidth = $("#chart").width();
+            // Defining the chart element's width here because Firefox gives a zero width if the height is defined by JS but the width by CSS.
+            $("#chart").width($("#chart-holder").width());
             $("#chart").height(ChartConstants.pixelsPerMinute * ChartConstants.yScaleDomainMax);
+
+            this.chartWidth = $("#chart").width();
 
             this.shortnames = shortnames;
 
