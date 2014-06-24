@@ -1,0 +1,153 @@
+﻿@import "library/leaflet/leaflet.css";
+@import "library/d3.slider/d3.slider.css";
+
+html, body, #app {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    font-size: 11px;
+    font-family: Verdana,Arial,sans-serif;
+}
+
+/* Instructions styling */
+#instructions {
+    float: left;
+    width: 250px;
+    margin: 10px;
+    padding: 0px 10px 10px 10px;
+    font-size:14px;
+    text-align: justify;
+}
+
+#instructions ol, #instructions ul {
+    margin-left: -20px;
+}
+
+#instructions h2, #instructions h3 {
+    text-align: center;
+}
+
+#instructions dl {
+    margin: 0;
+    padding: 0;
+}
+
+#instructions dl dt {
+    margin: 0;
+	padding: 0;
+	font-weight: bold;
+}
+
+#instructions dl dd {
+    margin: 0 0 1em 0;
+	padding: 0;
+}
+
+.example text {
+    font-size: 11px;
+}
+
+/* Map and controls styling */
+#map-and-controls {
+    position: fixed;
+    width: calc(50% - 180px);
+    height: calc(100% - 20px);
+    margin: 10px;
+    margin-left: 290px;
+}
+
+#controls {
+    width: 100%;
+    height: 80px;
+}
+
+.slider {
+    float: left;
+    width: calc(100% - 160px);
+    margin: 10px;
+}
+
+.slider-label {
+    text-align: right;
+    clear: left;
+    margin: 10px;
+    float: left;
+    width: 100px;
+}
+
+#map {
+    width: calc(100% - 20px);
+    height: calc(100% - 100px);
+    margin: 10px;
+}
+
+/* Chart default styling */
+#chart-holder {
+    height: 100%;
+    float: right;
+    width: calc(50% - 130px);
+    margin: 10px;
+}
+
+.axis path, .example polyline {
+    stroke-width: 1;
+    fill: none;
+    stroke: #aaa;
+    shape-rendering: crispEdges;
+}
+
+.bargroup .background {
+    opacity: 0;
+}
+
+.bargroup .rect, .bargroup .median, .example .rect, .example .median {
+    fill: cornflowerblue;
+    opacity: 0.4;
+    stroke: black;
+    stroke-width: 1;
+}
+
+.bargroup .median {
+    stroke: black;
+}
+
+/* Chart transition styling */
+.bargroup.destination .rect, .bargroup.destination .label {
+    fill: green;
+    opacity: 1;
+    transition-duration: 0.25s;
+}
+
+.bargroup.nulldata .rect, .bargroup.nulldata .label {
+    fill: firebrick;
+    opacity: 0.1;
+    transition-duration: 0.25s;
+}
+
+.bargroup.highlighted .rect, .bargroup.highlighted .label {
+    fill: darkorange;
+    transition-duration: 0.1s;
+}
+
+.bargroup.expanded .rect, .bargroup.expanded .label, .bargroup.expanded .median {
+    opacity: 1;
+}
+
+.bargroup.notexpanded .rect, .bargroup.notexpanded .label, .bargroup.notexpanded .median {
+    opacity: 0.1;
+    transition-duration: 0.25s;
+}
+
+.bargroup.nulldata .median {
+    opacity: 0;
+}
+
+.bargroup.expanded .background {
+    stroke-width: 0;
+    transition-duration: 0.25s;
+}
+
+.y.axis.suppressed {
+    opacity: 0.1;
+    transition-duration: 0.25s;
+}

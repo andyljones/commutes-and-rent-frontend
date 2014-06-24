@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Commutes & Rent in London</title>
+    <link rel="stylesheet" href="commutes-and-rent.css" type="text/css" />
+
+</head>
+<body>
+    <div id="app">
+        <div id="instructions" class="d3-slider">
+            <h2>Commutes & Rent</h2>
+            <ol>
+                <li>Pick a station near your job</li>
+                <li>Pick what time you start</li>
+                <li>Pick a property type</li>
+                <li>Explore the trade-off between commute & rent</li>
+            </ol>
+            <p>
+                The chart on the right displays the typical range of property prices near a station in terms of the commute time from that station. <strong>Bars can be clicked on</strong> to display more detailed information.
+            </p>
+            <svg height="65px" width="100%">
+
+                <g class="example">
+                    <text x=100 y=10 text-anchor="middle">Average</text>
+                    <polyline points="95,23 95,18 100,18 100,13 100,18 105,18 105,23"></polyline>
+
+                    <rect x=25 y="25" width=200 height=13 class="rect" style="opacity:1;"></rect>
+                    <line x1=100 y1=25 x2=100 y2=38 class="median" style="opacity:1;"></line>
+
+                    <polyline points="25,40 25,45 125,45 125,50, 125,45 225,45 225,40"></polyline>
+                    <text x=125 y=60 text-anchor="middle">50% of properties</text>
+                </g>
+            </svg>
+            <p>
+                Commute time is calculated with the goal of getting you to the chosen station by the chosen time.
+            </p>
+            <p>
+                The rent range around each station is derived from the rent statistics for the Local Authority District the station lies in.
+            </p>
+
+            <h3>FAQ</h3>
+            <dl>
+                <dt>Why are there no stations south of the river?</dt>
+                <dd>The TfL data used to calculate commutes only covers the Underground and DLR. The timetables for the Overground and for National Rail are available, but parsing the ancient format they use is still on my to-do list.</dd>
+                
+                <dt>What are the red bars?</dt>
+                <dd>They represent stations for which there's no rent data available - not enough properties are rented in those areas for the ONS to provide figures.</dd>
+                
+                <dt>Those seem much shorter commutes than I'm used to!</dt>
+                <dd>There's two factors here: first, travel between stations doesn't account for walking to and from the station. Second, I haven't been able to find any machine-readable data about how long it takes to change platforms at each station, so for better or worse I've assumed you can change platforms instantly. Because Underground trains are fairly frequent, this shouldn't distort the results too much.</dd>
+                
+                <dt>Stations <em>x</em> and <em>y</em> are right next to each other, but your chart says they take ages to get between!</dt>
+                <dd>With only TfL data at hand, the only kind of links the program can "see" are along an underground line between stations, or between platforms of a station. Fortunately in most of the places where two lines come close together, there's a station serving both (though there are some notable exceptions).</dd>
+                
+                <dt>What about buses?</dt>
+                <dd>TfL does provide good data for buses, but the amount of time that'd be needed to calculate the fastest route between any pair out of several thousand bus stops... well it's not out of the question, but it's definitely more intimidating. Maybe in future.</dd>
+                
+                <dt>Why did you make this?</dt>
+                <dd>When I learn new languages or tools, I like to have a project to motivate me. In this case I wanted to learn Java and JavaScript/HTML/CSS. </dd>
+                
+                <dt>Where can I find the source?</dt>
+                <dd>The code for this front end can be found in <a href="https://github.com/andyljones/commutes-and-rent-frontend">this GitHub repository</a>. The code for the preprocessor can be found in <a href="https://github.com/andyljones/commutes-and-rent-preprocessor">this other GitHub repository</a>.</dd>
+            </dl>
+            
+            <h3>Links</h3>
+            <ul>
+                <li><a href="http://andyljones.github.io/">My personal blog.</a></li>
+                <li><a href="http://www.tfl.gov.uk/info-for/open-data-users/">TfL's Open Data website</a>, source of all commute data.</li>
+                <li><a href="http://www.statistics.gov.uk/hub/index.html">The ONS's website</a>, source of all rent data.</li>
+            </ul>
+
+        </div>
+        <div id="map-and-controls" class="d3-slider">
+            <div id="map"></div>
+            <div id="controls">
+                <div class="slider-label">Arrival time:</div><div id="timeslider" class="slider"></div>
+                <div class="slider-label">Property type:</div><div id="bedroomslider" class="slider"></div>
+            </div>
+        </div>
+        <div id="chart-holder">
+            <svg id="chart" class="d3-slider">
+                <g class="x axis d3-slider-axis"></g>
+                <g class="y axis d3-slider-axis"></g>
+            </svg>
+        </div>
+    </div>
+    
+
+    <script src="library/jquery/jquery-2.1.0.min.js"></script>
+    <script src="library/leaflet/leaflet.js"></script>
+    <script src="library/d3/d3.min.js"></script>
+    <script src="library/d3.slider/d3.slider.js"></script>
+    <script src="library/q/q.js"></script>
+    <script src="commutes-and-rent.js"></script>
+    
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date(); a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-48268620-1', 'github.com');
+        ga('send', 'pageview');
+
+    </script>
+</body>
+</html>
