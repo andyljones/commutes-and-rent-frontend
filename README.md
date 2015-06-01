@@ -1,4 +1,4 @@
-This is the frontend for an [exploration of commutes & rent in London](andyljones.github.io/pages/commutes-and-rent). 
+This is the frontend for an [exploration of commutes & rent in London](http://andyljones.github.io/commutes-and-rent-frontend/). 
 
 <p align="center">
 <img src="http://i.imgur.com/v8VOP7o.png">
