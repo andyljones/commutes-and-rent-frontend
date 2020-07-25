@@ -4,7 +4,13 @@
     <meta charset="utf-8" />
     <title>Commutes & Rent in London</title>
     <link rel="stylesheet" href="commutes-and-rent.css" type="text/css" />
-
+   
+    <!-- Tracking pageviews is really useful to me to see what kind of stuff I've done is useful to people. But I'm
+    keen to not to track any more than that, and so this is a minimal solution. It's a self-hosted matomo tracking
+    pixel with IP anonymization. It gives me no more information than the server logs would, if I could actually
+    access github-pages' server logs. Your data will not be shared with anyone, and I will be the only person to ever
+    look at the stats.-->
+	<img src="https://live.andyljones.com/mat/mat.php?idsite=1&amp;rec=1" style="border:0" alt=""/>
 </head>
 <body>
     <div id="app">
@@ -93,18 +99,5 @@
     <script src="library/d3.slider/d3.slider.js"></script>
     <script src="library/q/q.js"></script>
     <script src="commutes-and-rent.js"></script>
-    
-    <script>
-        (function (i, s, o, g, r, a, m) {
-            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
-                (i[r].q = i[r].q || []).push(arguments)
-            }, i[r].l = 1 * new Date(); a = s.createElement(o),
-            m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
-        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-        ga('create', 'UA-48268620-1', 'github.com');
-        ga('send', 'pageview');
-
-    </script>
 </body>
 </html>
